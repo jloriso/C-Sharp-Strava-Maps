@@ -8,18 +8,25 @@
     <AssemblyName>GpxWorldMap</AssemblyName>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
-
   <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="Models\" />
     <Folder Include="Readers\" />
-    <Folder Include="Rendering\" />
     <Folder Include="Server\" />
     <Folder Include="Shared\" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="bin\Debug\net8.0\gpxworldmap.config.json" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="bin\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Rendering/Templates/*.html" />
   </ItemGroup>
 
 </Project>
