@@ -7,12 +7,12 @@ public static class ActivityColors
 {
     static readonly Dictionary<string, string> KnownTypeColors = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Run"] = "#e6194b",
-        ["TrailRun"] = "#f58231",
-        ["Walk"] = "#3cb44b",
-        ["Hike"] = "#469990",
-        ["Ride"] = "#4363d8",
-        ["VirtualRide"] = "#42d4f4",
+        ["Run"] = "#fc4c02",
+        ["TrailRun"] = "#ff8c00",
+        ["Walk"] = "#8bc34a",
+        ["Hike"] = "#8bc34a",
+        ["Ride"] = "#00b0ff",
+        ["VirtualRide"] = "#00b0ff",
         ["GravelRide"] = "#9a6324",
         ["MountainBikeRide"] = "#800000",
         ["Swim"] = "#911eb4",

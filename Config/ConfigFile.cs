@@ -4,5 +4,6 @@ class ConfigFile
 {
     public string? GpxFolder { get; set; }
     public string? CsvFile { get; set; }
-    public string? OutputHtml { get; set; }
+    public string? OutputHeatmapHtml { get; set; }
+    public string? OutputLineMapHtml { get; set; }
 }

@@ -10,8 +10,6 @@ public static class GpxReader
         var doc = XDocument.Parse(xml);
         var result = new ParsedGpx();
 
-        // Match elements by local name only, so this works for both GPX 1.0 and
-        // 1.1 files regardless of which namespace (if any) they declare.
         foreach (var seg in doc.Descendants().Where(e => e.Name.LocalName == "trkseg"))
         {
             var pts = seg.Descendants().Where(e => e.Name.LocalName == "trkpt")

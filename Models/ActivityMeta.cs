@@ -1,7 +1,7 @@
 /// <summary>
-/// The metadata attached to a single plotted track/waypoint -- either taken from a
-/// matched CSV row, or a fallback ("Unknown" type, filename as name) when there's
-/// no matching row.
+/// The metadata attached to a single activity -- either taken from a matched CSV
+/// row, or a fallback ("Unknown" type, filename as name) when there's no matching
+/// row.
 /// </summary>
 public class ActivityMeta
 {

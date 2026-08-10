@@ -8,14 +8,20 @@ using System.Text;
 /// Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
 /// extracts tracks/routes/waypoints, optionally joins each one against a Strava-style
 /// activities CSV (matched by the numeric ID in the CSV's Filename column, falling
-/// back to Activity ID), and serves a single interactive Leaflet map (OpenStreetMap-
-/// family tiles) of everything from a local web server.
+/// back to Activity ID), and produces two standalone map pages:
+///
+///   - a frequency heatmap of every recorded GPS point (HeatmapDataBuilder /
+///     HeatmapHtmlBuilder), and
+///   - a line map of every route, colored by activity type and weighted/opacity-
+///     scaled by how many times that stretch of road/trail has been travelled
+///     (RouteFrequencyMapBuilder / LineMapHtmlBuilder),
+///
+/// both served locally (for OSM tile-referer reasons) with a Chicago-centered
+/// default view, per-activity-type checkboxes, and a "jump to" location control.
+/// This mirrors the reference Python heatmapController.py / linemapController.py.
 ///
 /// Usage:
-///   dotnet run -- [activity-folder] [activities.csv] [output.html] [--config path.json]
-///
-/// All arguments are optional. Put your paths in gpxworldmap.config.json (see
-/// gpxworldmap.config.example.json) to skip typing them every time -- see README.md.
+///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [--config path.json]
 /// </summary>
 class Program
 {
@@ -41,7 +47,7 @@ class Program
         }
         Console.WriteLine($"Found {files.Length} activity file(s) in {config.GpxFolder}");
 
-        var features = new List<string>();
+        var tracks = new List<ActivityTrack>();
         var matchedIds = new HashSet<string>();
         int unmatchedGpxCount = 0;
 
@@ -62,18 +68,20 @@ class Program
             try
             {
                 var parsed = ParseActivityFile(file, name);
+                var track = new ActivityTrack { ActivityId = id, Type = meta.Type, Color = meta.Color };
 
-                int segCount = 0;
                 foreach (var seg in parsed.Segments)
                 {
                     if (seg.Count < 2) continue;
-                    features.Add(GeoJsonBuilder.BuildLineStringFeature(seg, meta));
-                    segCount++;
+                    track.Segments.Add(seg);
+                    track.AllPoints.AddRange(seg);
                 }
                 foreach (var pt in parsed.Points)
-                    features.Add(GeoJsonBuilder.BuildPointFeature(pt, meta));
+                    track.AllPoints.Add((pt.Lat, pt.Lon));
 
-                Console.WriteLine($"  {name}: {segCount} track segment(s), {parsed.Points.Count} waypoint(s) [{meta.Type}]");
+                if (track.AllPoints.Count > 0) tracks.Add(track);
+
+                Console.WriteLine($"  {name}: {track.Segments.Count} track segment(s), {parsed.Points.Count} waypoint(s) [{meta.Type}]");
             }
             catch (Exception ex)
             {
@@ -84,19 +92,41 @@ class Program
         if (config.CsvFile != null)
             PrintMatchSummary(activitiesByFilenameId!, activitiesByActivityId!, matchedIds, unmatchedGpxCount);
 
-        if (features.Count == 0)
+        if (tracks.Count == 0)
         {
             Console.WriteLine("No usable track points/waypoints found across all files.");
             return 1;
         }
 
-        string geoJson = "{\"type\":\"FeatureCollection\",\"features\":[" + string.Join(",", features) + "]}";
-        string html = MapHtmlBuilder.BuildHtml(geoJson);
-        File.WriteAllText(config.OutputHtml, html, Encoding.UTF8);
-        Console.WriteLine($"\nWrote {Path.GetFullPath(config.OutputHtml)}");
+        var typeColors = tracks.Select(t => t.Type).Distinct().OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .Select(t => (Type: t, Color: ActivityColors.ColorForType(t))).ToList();
+        var locations = DefaultLocations.Standard();
 
-        LocalWebServer.Serve(html);
+        Console.WriteLine("\nBuilding heatmap...");
+        var heat = HeatmapDataBuilder.Build(tracks);
+        string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(heat.ByTypeJs, typeColors, locations);
+
+        Console.WriteLine("Building line map (computing route frequency)...");
+        var lineData = RouteFrequencyMapBuilder.Build(tracks);
+        string linemapHtml = LineMapHtmlBuilder.BuildHtml(lineData.ByTypeJs, typeColors, locations);
+
+        WriteFile(config.OutputHeatmapHtml, heatmapHtml);
+        WriteFile(config.OutputLineMapHtml, linemapHtml);
+
+        LocalWebServer.Serve(new Dictionary<string, string>
+        {
+            [Path.GetFileName(config.OutputHeatmapHtml)] = heatmapHtml,
+            [Path.GetFileName(config.OutputLineMapHtml)] = linemapHtml,
+        });
         return 0;
+    }
+
+    static void WriteFile(string path, string content)
+    {
+        string? dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+        File.WriteAllText(path, content, Encoding.UTF8);
+        Console.WriteLine($"Wrote {Path.GetFullPath(path)}");
     }
 
     static string[] FindActivityFiles(string folder)
