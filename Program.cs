@@ -188,9 +188,16 @@ class Program
         if (byFilenameId.TryGetValue(id, out var record) || byActivityId.TryGetValue(id, out record))
         {
             meta.Name = string.IsNullOrWhiteSpace(record.Name) ? id : record.Name;
-            meta.Type = string.IsNullOrWhiteSpace(record.Type) ? "Unknown" : record.Type;
             meta.Date = record.Date;
             meta.Description = record.Description;
+
+            string rawType = string.IsNullOrWhiteSpace(record.Type) ? "Unknown" : record.Type;
+
+            bool isRunOrRide =
+                rawType.Equals("Run", StringComparison.OrdinalIgnoreCase) ||
+                rawType.Equals("Ride", StringComparison.OrdinalIgnoreCase);
+
+            meta.Type = isRunOrRide ? rawType : "Other";
         }
 
         meta.Color = ActivityColors.ColorForType(meta.Type);
