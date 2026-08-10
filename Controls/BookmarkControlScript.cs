@@ -3,21 +3,24 @@ using System.Globalization;
 using System.Text;
 
 /// <summary>Builds the JS for a Leaflet control that lets the user jump the map to
-/// one of a fixed set of named locations (each with its own lat/lon/zoom). Used by
-/// both the heatmap and line map pages, since the "jump to" behavior itself doesn't
-/// depend on what's actually drawn on the map.</summary>
+/// one of a fixed set of named locations (each with its own lat/lon/zoom), using one
+/// button per location rather than a dropdown -- every option is visible and
+/// reachable in a single click. Used by both the heatmap and line map pages, since
+/// the "jump to" behavior itself doesn't depend on what's actually drawn on the
+/// map.</summary>
 public static class BookmarkControlScript
 {
     public static string Build(IEnumerable<MapLocation> locations, string defaultSelection = "Chicago")
     {
-        var options = new StringBuilder();
+        var buttons = new StringBuilder();
         var lookup = new StringBuilder("{");
         bool first = true;
         foreach (var loc in locations)
         {
-            string selectedAttr = loc.Name == defaultSelection ? " selected" : "";
-            options.Append("<option value=\"").Append(Esc(loc.Name)).Append('"').Append(selectedAttr).Append('>')
-                   .Append(Esc(loc.Name)).Append("</option>");
+            string activeClass = loc.Name == defaultSelection ? " active" : "";
+            buttons.Append("<button type=\"button\" class=\"bookmark-btn").Append(activeClass)
+                   .Append("\" data-location=\"").Append(Esc(loc.Name)).Append("\">")
+                   .Append(Esc(loc.Name)).Append("</button>");
 
             if (!first) lookup.Append(",");
             first = false;
@@ -32,14 +35,19 @@ public static class BookmarkControlScript
   bookmarkControl.onAdd = function () {
     var div = L.DomUtil.create('div', 'legend bookmark-control');
     div.innerHTML = '<strong>Jump to</strong><br>' +
-      '<select id=""bookmark-select"">" + options + @"</select>';
+      '<div class=""bookmark-buttons"">" + buttons + @"</div>';
     L.DomEvent.disableClickPropagation(div);
     return div;
   };
   bookmarkControl.addTo(map);
-  document.getElementById('bookmark-select').addEventListener('change', function (e) {
-    var loc = bookmarkLocations[e.target.value];
-    if (loc) map.setView([loc[0], loc[1]], loc[2]);
+  document.querySelectorAll('.bookmark-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var loc = bookmarkLocations[btn.getAttribute('data-location')];
+      if (!loc) return;
+      map.setView([loc[0], loc[1]], loc[2]);
+      document.querySelectorAll('.bookmark-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
   });
 ";
     }

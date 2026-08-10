@@ -4,8 +4,8 @@ using System.Text;
 /// <summary>Builds the standalone line map page: one colored, frequency-weighted
 /// polyline layer per activity type (well-worn routes render bold, rare ones stay
 /// thin but visible), each toggleable via the activity-type checkboxes, plus the
-/// "jump to" location control. Defaults to a Chicago-centered view, matching the
-/// reference Python linemapController.</summary>
+/// "jump to" location button control. Defaults to a Chicago-centered view, matching
+/// the reference Python linemapController.</summary>
 public static class LineMapHtmlBuilder
 {
     public static string BuildHtml(
@@ -27,7 +27,13 @@ public static class LineMapHtmlBuilder
   html, body, #map { height: 100%; margin: 0; }
   .legend { background: white; padding: 8px 12px; font: 13px sans-serif; line-height: 1.6; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
   .legend .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; }
-  .bookmark-control select { font: 13px sans-serif; }
+  .bookmark-buttons { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .bookmark-btn {
+    font: 13px sans-serif; padding: 4px 10px; border: 1px solid #ccc; border-radius: 4px;
+    background: #f7f7f7; cursor: pointer; text-align: left;
+  }
+  .bookmark-btn:hover { background: #ececec; }
+  .bookmark-btn.active { background: #3388ff; border-color: #3388ff; color: white; }
 </style>
 </head>
 <body>

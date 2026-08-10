@@ -15,7 +15,8 @@ This mirrors a reference Python project (`heatmapController.py` /
 
 Both pages default to a **Chicago-centered view**, have a **checkbox per activity
 type** (colored to match that type) to show/hide it independently, and a **"Jump
-to" control** that pans/zooms the map to one of four preset locations:
+to" button control** — one button per preset location, all visible at once, no
+dropdown to open — that pans/zooms the map to one of four preset locations:
 
 | Location | Lat | Lon | Zoom |
 |---|---|---|---|
@@ -23,6 +24,9 @@ to" control** that pans/zooms the map to one of four preset locations:
 | Chicago (default) | 42.0707 | -87.7368 | 10 |
 | Kalamazoo | 42.2 | -85.6 | 11 |
 | World | 20.0 | 0.0 | 3 |
+
+The button matching the map's current location is highlighted (blue); clicking
+another button pans/zooms the map and moves the highlight to it.
 
 ### Requirements
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) (or later)
@@ -79,7 +83,7 @@ GpxWorldMap/
 │   ├── ActivityColors.cs            # consistent color-per-activity-type logic
 │   ├── HeatmapDataBuilder.cs        # aggregates points into weighted heat data per type
 │   ├── RouteFrequencyMapBuilder.cs  # grid-snaps routes and scores edges by frequency
-│   ├── BookmarkControlScript.cs     # JS for the "jump to location" control
+│   ├── BookmarkControlScript.cs     # JS for the "jump to location" button control
 │   ├── ActivityTypeControlScript.cs # JS for the per-type checkbox control
 │   ├── HeatmapHtmlBuilder.cs        # assembles the heatmap page
 │   └── LineMapHtmlBuilder.cs        # assembles the line map page
@@ -108,6 +112,11 @@ Weight (1.2–3.5px) and opacity (0.35–0.95) scale with that score, clipped at
 Each type gets its own colored polyline layer, toggled independently by its
 checkbox.
 
+**Jump-to control** (`BookmarkControlScript`): renders one button per
+`MapLocation`; clicking a button calls `map.setView([lat, lon], zoom)` and toggles
+an `active` CSS class so the current location stays visually highlighted. Shared
+verbatim by both pages.
+
 ### Joining GPX files with your activities CSV
 
 Same matching rules as before: the tool reads five columns from your CSV (Activity
@@ -122,4 +131,6 @@ labeled "Unknown"; CSV rows with no matching file are simply skipped.
 - Heatmap point-rounding precision (6 decimal places) is a parameter on
   `HeatmapDataBuilder.Build(...)`.
 - The four jump-to locations are in `Shared/DefaultLocations.cs` — add, remove, or
-  edit as needed.
+  edit as needed; the button control adapts automatically to however many you list.
+- Button styling (`.bookmark-btn`, `.bookmark-btn.active`) lives in the `<style>`
+  block inside `HeatmapHtmlBuilder.cs` / `LineMapHtmlBuilder.cs`.
