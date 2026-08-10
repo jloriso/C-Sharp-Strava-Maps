@@ -4,24 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-/// <summary>Fully-resolved settings for one run: where the GPX files are, the
-/// optional CSV to join against, and where to write the map.</summary>
-public class AppConfig
-{
-    public string GpxFolder = "";
-    public string? CsvFile;
-    public string OutputHtml = "map.html";
-}
-
-/// <summary>Shape of the optional JSON config file. All fields are optional --
-/// anything left out just falls back to the command line or the defaults.</summary>
-class ConfigFile
-{
-    public string? GpxFolder { get; set; }
-    public string? CsvFile { get; set; }
-    public string? OutputHtml { get; set; }
-}
-
 public static class AppConfigLoader
 {
     const string DefaultConfigFileName = "gpxworldmap.config.json";

@@ -58,23 +58,36 @@ terminal when you're done to stop the server.
 
 ## Project layout
 
-The code is split by responsibility so each file is easy to find and change:
+The code is organized into folders by responsibility, following the pipeline shape
+of the app (Config → Readers → Models → Rendering → Server). Each file contains
+exactly one class/record, named to match the file:
 
-| File | Responsibility |
-|---|---|
-| `Program.cs` | Entry point — orchestrates everything else |
-| `AppConfig.cs` | Loads/merges `gpxworldmap.config.json` and command-line args |
-| `Models.cs` | Plain data types (`ActivityRecord`, `ActivityMeta`, `ParsedGpx`) |
-| `CsvReader.cs` | Reads and parses the activities CSV |
-| `ActivityId.cs` | Shared "extract ID from filename" logic (CSV rows and files alike) |
-| `GzHelper.cs` | Gzip decompression (text for XML formats, bytes for FIT) |
-| `GpxReader.cs` | Parses GPX XML |
-| `TcxReader.cs` | Parses TCX XML (Garmin Training Center format) |
-| `FitReader.cs` | Parses FIT's binary format (see below) |
-| `ActivityColors.cs` | Consistent color-per-activity-type logic |
-| `GeoJsonBuilder.cs` | Builds GeoJSON features (with escaped popup HTML) |
-| `MapHtmlBuilder.cs` | Builds the Leaflet map page (tiles, legend, styling) |
-| `LocalWebServer.cs` | Serves the page locally and opens your browser |
+```
+GpxWorldMap/
+├── Program.cs                # entry point -- orchestrates everything else
+├── Config/
+│   ├── AppConfig.cs          # resolved settings for one run
+│   ├── ConfigFile.cs         # shape of the optional JSON config file
+│   └── AppConfigLoader.cs    # loads/merges gpxworldmap.config.json and CLI args
+├── Models/
+│   ├── ActivityRecord.cs     # one row from the activities CSV
+│   ├── ActivityMeta.cs       # metadata attached to a plotted track/waypoint
+│   └── ParsedGpx.cs          # track segments + waypoints extracted from a file
+├── Readers/
+│   ├── CsvReader.cs          # reads and parses the activities CSV
+│   ├── GzHelper.cs           # gzip decompression (text or raw bytes)
+│   ├── GpxReader.cs          # parses GPX XML
+│   ├── TcxReader.cs          # parses TCX XML (Garmin Training Center format)
+│   └── FitReader.cs          # parses FIT's binary format (see below)
+├── Rendering/
+│   ├── ActivityColors.cs     # consistent color-per-activity-type logic
+│   ├── GeoJsonBuilder.cs     # builds GeoJSON features (with escaped popup HTML)
+│   └── MapHtmlBuilder.cs     # builds the Leaflet map page (tiles, legend, styling)
+├── Server/
+│   └── LocalWebServer.cs     # serves the page locally and opens your browser
+└── Shared/
+    └── ActivityId.cs         # shared "extract ID from filename" logic
+```
 
 ## File formats
 

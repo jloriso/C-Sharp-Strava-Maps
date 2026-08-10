@@ -9,4 +9,13 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Models\" />
+    <Folder Include="Readers\" />
+    <Folder Include="Rendering\" />
+    <Folder Include="Server\" />
+    <Folder Include="Shared\" />
+  </ItemGroup>
+
 </Project>
