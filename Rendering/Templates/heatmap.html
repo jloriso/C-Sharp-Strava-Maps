@@ -27,7 +27,7 @@
     // so frequently-visited spots show up hotter.
     var pointsByType = {{POINTS_BY_TYPE_JS}};
 
-    var map = L.map('map').setView([42.0707, -87.7368], 10);
+    var map = L.map('map').setView({{INITIAL_VIEW_JS}});
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19, subdomains: 'abcd', detectRetina: true,

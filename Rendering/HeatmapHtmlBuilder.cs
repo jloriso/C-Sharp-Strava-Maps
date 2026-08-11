@@ -14,10 +14,13 @@ public static class HeatmapHtmlBuilder
     {
         string bookmarkScript = BookmarkControlScript.Build(locations);
         string typeControlScript = ActivityTypeControlScript.Build(types);
+        var initial = locations.FirstOrDefault() ?? new MapLocation { Lat = 20.0, Lon = 0.0, Zoom = 3 };
+        string initialViewJs = $"[{(initial.Lat)}, {(initial.Lon)}], {initial.Zoom}";
 
         return HtmlTemplateLoader.Load("heatmap.html")
             .Replace("{{POINTS_BY_TYPE_JS}}", pointsByTypeJs)
             .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
-            .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript);
+            .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)
+            .Replace("{{INITIAL_VIEW_JS}}", initialViewJs);
     }
 }

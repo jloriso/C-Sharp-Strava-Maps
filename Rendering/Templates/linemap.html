@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Activity Heatmap</title>
+    <title>Route Line Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         html, body, #map { height: 100%; margin: 0; }
@@ -20,34 +20,44 @@
 <body>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
-    // Weighted [lat, lon, weight] points per activity type -- built server-side by
-    // rounding every recorded GPS point to a fixed precision and counting repeats,
-    // so frequently-visited spots show up hotter.
-    var pointsByType = {{POINTS_BY_TYPE_JS}};
+    // One GeoJSON FeatureCollection of frequency-scored route edges per activity
+    // type -- each edge already carries its own weight/opacity, computed server-side
+    // from how many distinct activities of that type crossed it.
+    var lineDataByType = {{LINE_DATA_BY_TYPE_JS}};
+    var typeColors = {{TYPE_COLORS_JS}};
 
-    var map = L.map('map').setView([42.0707, -87.7368], 10);
+    var map = L.map('map').setView({{INITIAL_VIEW_JS}});
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19, subdomains: 'abcd', detectRetina: true,
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
-    var heatOptions = {
-        radius: 8, blur: 10, maxZoom: 15, minOpacity: 0.3,
-        gradient: { 0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 0.85: 'red' }
-    };
-
-    // One heat layer per activity type, all shown by default; the checkboxes below
+    // One layer per activity type, all shown by default; the checkboxes below
     // toggle each one independently.
-    var heatLayersByType = {};
-    Object.keys(pointsByType).forEach(function (type) {
-        heatLayersByType[type] = L.heatLayer(pointsByType[type], heatOptions).addTo(map);
+    var lineLayersByType = {};
+    Object.keys(lineDataByType).forEach(function (type) {
+        var color = typeColors[type] || '#000000';
+        var layer = L.geoJSON(lineDataByType[type], {
+            style: function (feature) {
+                return {
+                    color: color,
+                    weight: feature.properties.weight,
+                    opacity: feature.properties.opacity,
+                    lineCap: 'round'
+                };
+            },
+            onEachFeature: function (feature, lyr) {
+                var times = feature.properties.count === 1 ? 'once' : (feature.properties.count + ' times');
+                lyr.bindPopup(type + ' &middot; traveled ' + times);
+            }
+        }).addTo(map);
+        lineLayersByType[type] = layer;
     });
 
     window.onActivityTypeToggle = function (type, checked) {
-        var layer = heatLayersByType[type];
+        var layer = lineLayersByType[type];
         if (!layer) return;
         if (checked) map.addLayer(layer); else map.removeLayer(layer);
     };
