@@ -9,7 +9,7 @@ using System.Text;
 public static class LineMapHtmlBuilder
 {
     public static string BuildHtml(
-        string lineDataByTypeJs,
+        string pointsByTypeJs,
         List<(string Type, string Color)> types,
         List<MapLocation> locations)
     {
@@ -18,7 +18,7 @@ public static class LineMapHtmlBuilder
         string typeColorsJs = BuildTypeColorsJs(types);
 
         return HtmlTemplateLoader.Load("linemap.html")
-            .Replace("{{LINE_DATA_BY_TYPE_JS}}", lineDataByTypeJs)
+            .Replace("{{POINTS_BY_TYPE_JS}}", pointsByTypeJs)
             .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)
             .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
             .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript);
