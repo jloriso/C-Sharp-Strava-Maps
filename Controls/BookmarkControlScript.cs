@@ -7,7 +7,12 @@ using System.Text;
 /// button per location rather than a dropdown -- every option is visible and
 /// reachable in a single click. Used by both the heatmap and line map pages, since
 /// the "jump to" behavior itself doesn't depend on what's actually drawn on the
-/// map.</summary>
+/// map.
+///
+/// The control's actual JS/markup lives in Controls/Templates/bookmarkControl.js
+/// (loaded via HtmlTemplateLoader), not as a C# verbatim string in this file -- this
+/// class is only responsible for producing the two dynamic pieces (the location
+/// lookup table and the button markup) that get spliced into it.</summary>
 public static class BookmarkControlScript
 {
     public static string Build(IEnumerable<MapLocation> locations, string defaultSelection = "Chicago")
@@ -29,27 +34,9 @@ public static class BookmarkControlScript
         }
         lookup.Append("}");
 
-        return @"
-  var bookmarkLocations = " + lookup + @";
-  var bookmarkControl = L.control({ position: 'topright' });
-  bookmarkControl.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend bookmark-control');
-    div.innerHTML = '<strong>Jump to</strong><br>' +
-      '<div class=""bookmark-buttons"">" + buttons + @"</div>';
-    L.DomEvent.disableClickPropagation(div);
-    return div;
-  };
-  bookmarkControl.addTo(map);
-  document.querySelectorAll('.bookmark-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var loc = bookmarkLocations[btn.getAttribute('data-location')];
-      if (!loc) return;
-      map.setView([loc[0], loc[1]], loc[2]);
-      document.querySelectorAll('.bookmark-btn').forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-    });
-  });
-";
+        return HtmlTemplateLoader.Load("Controls/Templates", "bookmarkControl.js")
+            .Replace("{{BOOKMARK_LOCATIONS_JS}}", lookup.ToString())
+            .Replace("{{BOOKMARK_BUTTONS_HTML}}", buttons.ToString());
     }
 
     static string Fmt(double d) => d.ToString("R", CultureInfo.InvariantCulture);

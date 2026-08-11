@@ -19,7 +19,7 @@ public static class LineMapHtmlBuilder
         var initial = locations.FirstOrDefault() ?? new MapLocation { Lat = 20.0, Lon = 0.0, Zoom = 3 };
         string initialViewJs = $"[{(initial.Lat)}, {(initial.Lon)}], {initial.Zoom}";
 
-        return HtmlTemplateLoader.Load("linemap.html")
+        return HtmlTemplateLoader.Load("Rendering/Templates", "linemap.html")
             .Replace("{{LINE_DATA_BY_TYPE_JS}}", lineDataByTypeJs)
             .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)
             .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)

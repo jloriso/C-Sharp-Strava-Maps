@@ -26,7 +26,13 @@
     <EmbeddedResource Remove="bin\**" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Rendering/Templates/*.html" CopyToOutputDirectory="PreserveNewest"/>
+<!--
     <EmbeddedResource Include="Rendering/Templates/*.html" />
+-->
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Controls/Templates/*.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

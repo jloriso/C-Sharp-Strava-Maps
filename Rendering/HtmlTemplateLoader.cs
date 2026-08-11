@@ -18,27 +18,18 @@ using System.Text;
 /// </summary>
 public static class HtmlTemplateLoader
 {
-    public static string Load(string templateFileName)
+    public static string Load(string templatesFolder, string templateFileName)
     {
-        var assembly = Assembly.GetExecutingAssembly();
+        string path = Path.Combine(AppContext.BaseDirectory, templatesFolder, templateFileName);
 
-        // Embedded resource names are namespace-qualified (e.g.
-        // "GpxWorldMap.Rendering.Templates.heatmap.html"), so match by suffix
-        // rather than hardcoding the full name -- keeps this working even if the
-        // project's root namespace or folder nesting ever changes.
-        string? resourceName = assembly.GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith("." + templateFileName, StringComparison.OrdinalIgnoreCase));
-
-        if (resourceName == null)
+        if (!File.Exists(path))
         {
             throw new InvalidOperationException(
-                $"Couldn't find embedded template '{templateFileName}'. Make sure " +
-                "Rendering/Templates/*.html is marked as <EmbeddedResource> in the .csproj " +
-                "and that the file name matches exactly (case-insensitive).");
+                $"Couldn't find template '{templateFileName}' at '{path}'. Make sure " +
+                $"{templatesFolder}/* is marked as <Content CopyToOutputDirectory=\"PreserveNewest\"> " +
+                "in the .csproj and that the project has been rebuilt since the file was added.");
         }
 
-        using var stream = assembly.GetManifestResourceStream(resourceName)!;
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return reader.ReadToEnd();
+        return File.ReadAllText(path);
     }
 }

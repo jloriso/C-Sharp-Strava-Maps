@@ -217,7 +217,7 @@ class Program
         int csvOnlyCount = totalCsvRows - matchedIds.Count;
 
         Console.WriteLine($"\n{matchedIds.Count} activity file(s) matched a CSV row.");
-        Console.WriteLine($"~{csvOnlyCount} CSV row(s) have no corresponding activity file (expected, per your note).");
+        Console.WriteLine($"~{csvOnlyCount} CSV row(s) have no corresponding activity files.");
         if (unmatchedGpxCount > 0)
             Console.WriteLine($"{unmatchedGpxCount} activity file(s) had no matching CSV row (check the Filename/Activity ID columns for that activity).");
     }

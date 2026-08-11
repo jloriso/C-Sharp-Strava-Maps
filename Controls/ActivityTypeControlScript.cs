@@ -9,6 +9,11 @@ using System.Text;
 /// and line map pages toggle different kinds of layers (heat layers vs. polyline
 /// layers) -- this class only owns the checkbox UI, not what happens when one is
 /// clicked.
+///
+/// The control's actual JS/markup lives in Controls/Templates/activityTypeControl.js
+/// (loaded via HtmlTemplateLoader), not as a C# verbatim string in this file -- this
+/// class is only responsible for producing the one dynamic piece (the per-type
+/// checkbox rows) that gets spliced into it.
 /// </summary>
 public static class ActivityTypeControlScript
 {
@@ -24,23 +29,8 @@ public static class ActivityTypeControlScript
                 .Append("</label>");
         }
 
-        return @"
-  var activityTypeControl = L.control({ position: 'bottomleft' });
-  activityTypeControl.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend activity-type-control');
-    div.innerHTML = '<strong>Activity Type</strong><br>" + rows + @"';
-    L.DomEvent.disableClickPropagation(div);
-    return div;
-  };
-  activityTypeControl.addTo(map);
-  document.querySelectorAll('.activity-type-toggle').forEach(function (cb) {
-    cb.addEventListener('change', function () {
-      if (typeof window.onActivityTypeToggle === 'function') {
-        window.onActivityTypeToggle(cb.getAttribute('data-type'), cb.checked);
-      }
-    });
-  });
-";
+        return HtmlTemplateLoader.Load("Controls/Templates", "activityTypeControl.js")
+            .Replace("{{ACTIVITY_TYPE_ROWS_HTML}}", rows.ToString());
     }
 
     static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
