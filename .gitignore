@@ -2,5 +2,6 @@
 /bin
 /.idea
 /heatmaps
+/.vs
 gpxworldmap.config.json
 map.html
