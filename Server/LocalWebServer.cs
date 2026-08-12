@@ -54,11 +54,16 @@ public static class LocalWebServer
 
     static string BuildIndexHtml(IEnumerable<string> pageNames)
     {
-        var sb = new StringBuilder("<!DOCTYPE html><html><head><meta charset='utf-8'><title>GpxWorldMap</title></head><body style='font-family:sans-serif;'><h2>Generated maps</h2><ul>");
+        string template = HtmlTemplateLoader.Load("Index", "index.html");
+
+        var links = new StringBuilder();
         foreach (var name in pageNames)
-            sb.Append($"<li><a href='{name}'>{name}</a></li>");
-        sb.Append("</ul></body></html>");
-        return sb.ToString();
+            links.Append($"<li><a href=\"{WebUtility.HtmlEncode(name)}\">{WebUtility.HtmlEncode(name)}</a></li>");
+
+        return template
+            .Replace("{{APP_TITLE}}", "GpxWorldMap")
+            .Replace("{{GENERATED_AT}}", DateTime.Now.ToString("yyyy-MM-dd HH:mm"))
+            .Replace("{{MAP_LINKS_HTML}}", links.ToString());
     }
 
     static int GetFreePort()

@@ -34,5 +34,8 @@
   <ItemGroup>
     <Content Include="Controls/Templates/*.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Index/*.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>
