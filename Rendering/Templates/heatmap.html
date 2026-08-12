@@ -48,8 +48,20 @@
     }).addTo(map);
 
     var heatOptions = {
-        radius: 8, blur: 10, maxZoom: 15, minOpacity: 0.3,
-        gradient: { 0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 0.85: 'red' }
+        radius: 10,
+        blur: 14,
+        maxZoom: 15,
+        minOpacity: 0.12,
+        // Cooler low frequency, warm mids, dark hot spots.
+        gradient: {
+            0.05: '#1e3a8a', // deep cool blue
+            0.20: '#2563eb', // blue
+            0.40: '#06b6d4', // cyan
+            0.60: '#fde047', // yellow
+            0.78: '#f97316', // orange
+            0.90: '#dc2626', // red
+            1.00: '#4a0404'  // dark red for highest frequency
+        }
     };
 
     // One heat layer per activity type, all shown by default; the checkboxes below

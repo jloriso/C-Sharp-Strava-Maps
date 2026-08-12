@@ -98,7 +98,7 @@ class Program
             return 1;
         }
 
-        var typeColors = tracks.Select(t => t.Type).Distinct().OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+        var typeColors = tracks.Select(t => t.Type).Distinct().OrderByDescending(t => t, StringComparer.OrdinalIgnoreCase)
             .Select(t => (Type: t, Color: ActivityColors.ColorForType(t))).ToList();
         var locations = DefaultLocations.Standard();
 
