@@ -61,7 +61,7 @@ public static class LocalWebServer
             links.Append($"<li><a href=\"{WebUtility.HtmlEncode(name)}\">{WebUtility.HtmlEncode(name)}</a></li>");
 
         return template
-            .Replace("{{APP_TITLE}}", "GpxWorldMap")
+            .Replace("{{APP_TITLE}}", "Strava World Map")
             .Replace("{{GENERATED_AT}}", DateTime.Now.ToString("yyyy-MM-dd HH:mm"))
             .Replace("{{MAP_LINKS_HTML}}", links.ToString());
     }

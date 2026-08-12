@@ -14,6 +14,7 @@ public static class HeatmapHtmlBuilder
     {
         string bookmarkScript = BookmarkControlScript.Build(locations);
         string typeControlScript = ActivityTypeControlScript.Build(types);
+        string homeControlScript = HomeControlScript.Build("/");
         var initial = locations.FirstOrDefault() ?? new MapLocation { Lat = 20.0, Lon = 0.0, Zoom = 3 };
         string initialViewJs = $"[{(initial.Lat)}, {(initial.Lon)}], {initial.Zoom}";
 
@@ -21,6 +22,7 @@ public static class HeatmapHtmlBuilder
             .Replace("{{POINTS_BY_TYPE_JS}}", pointsByTypeJs)
             .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
             .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)
-            .Replace("{{INITIAL_VIEW_JS}}", initialViewJs);
+            .Replace("{{INITIAL_VIEW_JS}}", initialViewJs)
+            .Replace("{{HOME_CONTROL_SCRIPT}}", homeControlScript);
     }
 }

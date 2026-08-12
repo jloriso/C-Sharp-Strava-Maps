@@ -15,6 +15,18 @@
         }
         .bookmark-btn:hover { background: #ececec; }
         .bookmark-btn.active { background: #3388ff; border-color: #3388ff; color: white; }
+        .home-control .home-btn {
+            font: 16px sans-serif;
+            line-height: 1;
+            width: 34px;
+            height: 30px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f7f7f7;
+            cursor: pointer;
+            padding: 0;
+        }
+        .home-control .home-btn:hover { background: #ececec; }
     </style>
 </head>
 <body>
@@ -29,7 +41,8 @@
     var lineDataByType = {{LINE_DATA_BY_TYPE_JS}};
     var typeColors = {{TYPE_COLORS_JS}};
 
-    var map = L.map('map').setView({{INITIAL_VIEW_JS}});
+    var map = L.map('map', { zoomControl: false }).setView({{INITIAL_VIEW_JS}});
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     // Share one canvas renderer across every type's layer instead of each L.geoJSON
     // call creating its own -- fewer canvas contexts for the browser to composite
@@ -87,6 +100,7 @@
 
     {{BOOKMARK_CONTROL_SCRIPT}}
     {{ACTIVITY_TYPE_CONTROL_SCRIPT}}
+    {{HOME_CONTROL_SCRIPT}}
 </script>
 </body>
 </html>
