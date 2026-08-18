@@ -6,4 +6,5 @@ class ConfigFile
     public string? CsvFile { get; set; }
     public string? OutputHeatmapHtml { get; set; }
     public string? OutputLineMapHtml { get; set; }
+    public string? OutputWeeklyMileageHtml { get; set; }
 }

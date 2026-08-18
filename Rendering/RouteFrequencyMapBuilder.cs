@@ -82,7 +82,7 @@ public static class RouteFrequencyMapBuilder
     {
         var sb = new StringBuilder("{");
         bool firstType = true;
-        foreach (var group in tracks.GroupBy(t => t.Type))
+        foreach (var group in tracks.GroupBy(t => ActivityCategory.CategoryForType(t.Type)))
         {
             if (!firstType) sb.Append(",");
             firstType = false;

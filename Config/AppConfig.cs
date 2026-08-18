@@ -5,5 +5,6 @@ public class AppConfig
     public string GpxFolder = "";
     public string? CsvFile;
     public string OutputHeatmapHtml = "heatmaps/standard_heatmap.html";
-    public string OutputLineMapHtml = "heatmaps/line_map.html";
+    public string OutputLineMapHtml = "heatmaps/linemap.html";
+    public string OutputWeeklyMileageHtml = "heatmaps/weekly_mileage.html";
 }

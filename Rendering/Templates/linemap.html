@@ -5,7 +5,12 @@
     <title>Route Line Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        html, body, #map { height: 100%; margin: 0; }
+        html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
+        #map { flex: 1 1 auto; }
+        .app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; flex: 0 0 auto; }
+        .app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
+        .app-nav .nav-link:hover { background: #333; color: #fff; }
+        .app-nav .nav-link.active { background: #3388ff; color: #fff; }
         .legend { background: white; padding: 8px 12px; font: 13px sans-serif; line-height: 1.6; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
         .legend .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; }
         .bookmark-buttons { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
@@ -30,23 +35,16 @@
     </style>
 </head>
 <body>
+{{NAV_BAR_HTML}}
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // One GeoJSON FeatureCollection of frequency-scored route lines per activity
-    // type -- built server-side by RouteFrequencyMapBuilder, which now merges
-    // consecutive same-tier edges into long polylines wherever the route doesn't
-    // branch, so this is a much smaller number of longer lines rather than tens of
-    // thousands of tiny 2-point segments.
     var lineDataByType = {{LINE_DATA_BY_TYPE_JS}};
     var typeColors = {{TYPE_COLORS_JS}};
 
     var map = L.map('map', { zoomControl: false }).setView({{INITIAL_VIEW_JS}});
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-    // Share one canvas renderer across every type's layer instead of each L.geoJSON
-    // call creating its own -- fewer canvas contexts for the browser to composite
-    // on every pan/zoom.
+    
     var sharedRenderer = L.canvas({ padding: 0.5 });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -54,8 +52,6 @@
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
-    // One layer per activity type, all shown by default; the checkboxes below
-    // toggle each one independently.
     var lineLayersByType = {};
     Object.keys(lineDataByType).forEach(function (type) {
         var color = typeColors[type] || '#000000';
@@ -67,20 +63,11 @@
                     weight: feature.properties.weight,
                     opacity: feature.properties.opacity,
                     lineCap: 'round',
-                    // Now that lines are long merged polylines rather than 2-point edges,
-                    // smoothFactor lets Leaflet simplify each one's vertex count per zoom
-                    // level -- cheap extra headroom on top of the feature-count reduction.
                     smoothFactor: 1.5
                 };
             }
         }).addTo(map);
 
-        // A single delegated click handler per layer, instead of calling
-        // .bindPopup() on every individual feature up front. With many thousands of
-        // route segments, pre-building that many popups at layer-construction time
-        // was itself a meaningful chunk of page-load cost; this builds popup content
-        // only the moment a route is actually clicked. e.layer is the specific
-        // sub-layer (polyline) that was clicked -- a standard Leaflet GeoJSON pattern.
         layer.on('click', function (e) {
             var props = e.layer.feature.properties;
             var times = props.minCount === props.maxCount

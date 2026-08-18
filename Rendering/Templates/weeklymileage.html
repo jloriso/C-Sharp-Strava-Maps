@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Weekly Mileage</title>
+    <style>
+        html, body { margin: 0; font: 14px sans-serif; background: #fafafa; }
+        .app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; }
+        .app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
+        .app-nav .nav-link:hover { background: #333; color: #fff; }
+        .app-nav .nav-link.active { background: #3388ff; color: #fff; }
+        #page { max-width: 960px; margin: 0 auto; padding: 16px; }
+        h1 { font-size: 18px; margin: 0 0 4px 0; }
+        #range-label { color: #555; margin-bottom: 12px; }
+        #chart-wrap { background: white; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.15); padding: 12px; }
+        #chart-wrap canvas { max-height: 420px; }
+        .controls-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+        .nav-btn {
+            font: 13px sans-serif; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px;
+            background: #f7f7f7; cursor: pointer;
+        }
+        .nav-btn:hover { background: #ececec; }
+        .nav-btn:disabled { opacity: 0.4; cursor: default; }
+        #week-slider { flex: 1; min-width: 160px; }
+        .type-checkboxes { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 12px 0; }
+        .type-checkboxes label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+        .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+        #total-miles { font-weight: 600; margin-top: 8px; }
+        #empty-state { padding: 24px; text-align: center; color: #777; display: none; }
+        #load-error { padding: 24px; text-align: center; color: #b3122b; display: none; }
+    </style>
+</head>
+<body>
+{{NAV_BAR_HTML}}
+<div id="page">
+    <h1>Weekly Mileage</h1>
+    <div id="range-label"></div>
+
+    <div class="type-checkboxes">
+        {{ACTIVITY_TYPE_CHECKBOXES_HTML}}
+    </div>
+
+    <div id="chart-wrap">
+        <canvas id="mileageChart"></canvas>
+        <div id="empty-state">No dated activities to chart yet.</div>
+        <div id="load-error">Couldn't load the charting library (Chart.js) from the CDN. Check your internet connection and reload the page.</div>
+    </div>
+
+    <div class="controls-row">
+        <button type="button" class="nav-btn" id="btn-start" title="Jump to the very first week of your dataset">&laquo; Jump to Start</button>
+        <button type="button" class="nav-btn" id="btn-older">&lsaquo; Older</button>
+        <input type="range" id="week-slider" min="0" max="0" value="0" step="1" />
+        <button type="button" class="nav-btn" id="btn-newer">Newer &rsaquo;</button>
+        <button type="button" class="nav-btn" id="btn-latest">Jump to Latest &raquo;</button>
+    </div>
+    <div id="total-miles"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    // ISO week-start (Monday) date strings, one continuous entry per week spanning
+    // the full range from the earliest to latest dated activity (including
+    // zero-mileage weeks) -- built server-side by WeeklyMileageDataBuilder. Each
+    // per-category array below is the same length and index-aligned with this one.
+    var weeks = {{WEEKS_JS}};
+    // {"Run": [milesWeek0, milesWeek1, ...], "Bike": [...], "Other": [...]}
+    var seriesByType = {{SERIES_BY_TYPE_JS}};
+    var typeColors = {{TYPE_COLORS_JS}};
+
+    var WINDOW_WEEKS = 26;  // ~6 months visible at a time, like Strava's default view
+    var STEP_WEEKS = 12;    // how far Older/Newer move per click
+
+    if (typeof Chart === 'undefined') {
+        // The CDN script tag above failed to load (offline, blocked, CDN outage,
+        // etc.) -- show a clear on-page message instead of letting `new Chart(...)`
+        // throw a ReferenceError that silently kills the rest of this script block
+        // (including the button/checkbox wiring below).
+        document.getElementById('chart-wrap').querySelector('canvas').style.display = 'none';
+        document.getElementById('load-error').style.display = 'block';
+    } else if (weeks.length === 0) {
+        document.getElementById('chart-wrap').querySelector('canvas').style.display = 'none';
+        document.getElementById('empty-state').style.display = 'block';
+    } else {
+        var maxStart = Math.max(0, weeks.length - WINDOW_WEEKS);
+        var windowStart = maxStart; // default view: most recent window, same as opening Strava's log
+        var hiddenTypes = {};       // category -> true if unchecked
+
+        var formatWeekLabel = function (iso) {
+            var d = new Date(iso + 'T00:00:00');
+            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        };
+
+        var visibleSlice = function (arr) {
+            return arr.slice(windowStart, windowStart + WINDOW_WEEKS);
+        };
+
+        var buildDatasets = function () {
+            return Object.keys(seriesByType).map(function (type) {
+                return {
+                    label: type,
+                    data: visibleSlice(seriesByType[type]),
+                    backgroundColor: typeColors[type] || '#888888',
+                    hidden: !!hiddenTypes[type],
+                    stack: 'miles'
+                };
+            });
+        };
+
+        var ctx = document.getElementById('mileageChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: visibleSlice(weeks).map(formatWeekLabel),
+                datasets: buildDatasets()
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Miles' } }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (item) {
+                                return item.dataset.label + ': ' + item.parsed.y.toFixed(1) + ' mi';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        var updateTotals = function () {
+            var total = 0;
+            Object.keys(seriesByType).forEach(function (type) {
+                if (hiddenTypes[type]) return;
+                visibleSlice(seriesByType[type]).forEach(function (mi) { total += mi; });
+            });
+            document.getElementById('total-miles').textContent = 'Total in view: ' + total.toFixed(1) + ' mi';
+        };
+
+        var updateRangeLabel = function () {
+            var visible = visibleSlice(weeks);
+            if (visible.length === 0) { document.getElementById('range-label').textContent = ''; return; }
+            var startLabel = formatWeekLabel(visible[0]);
+            var endWeek = new Date(visible[visible.length - 1] + 'T00:00:00');
+            endWeek.setDate(endWeek.getDate() + 6); // end of that week (Sunday)
+            var endLabel = endWeek.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('range-label').textContent = startLabel + ' \u2013 ' + endLabel;
+        };
+
+        var updateNavState = function () {
+            var slider = document.getElementById('week-slider');
+            slider.max = maxStart;
+            slider.value = windowStart;
+            document.getElementById('btn-start').disabled = windowStart <= 0;
+            document.getElementById('btn-older').disabled = windowStart <= 0;
+            document.getElementById('btn-newer').disabled = windowStart >= maxStart;
+            document.getElementById('btn-latest').disabled = windowStart >= maxStart;
+        };
+
+        var redraw = function () {
+            chart.data.labels = visibleSlice(weeks).map(formatWeekLabel);
+            chart.data.datasets = buildDatasets();
+            chart.update();
+            updateTotals();
+            updateRangeLabel();
+            updateNavState();
+        };
+
+        var setWindowStart = function (newStart) {
+            windowStart = Math.max(0, Math.min(maxStart, newStart));
+            redraw();
+        };
+
+        document.getElementById('btn-start').addEventListener('click', function () { setWindowStart(0); });
+        document.getElementById('btn-latest').addEventListener('click', function () { setWindowStart(maxStart); });
+        document.getElementById('btn-older').addEventListener('click', function () { setWindowStart(windowStart - STEP_WEEKS); });
+        document.getElementById('btn-newer').addEventListener('click', function () { setWindowStart(windowStart + STEP_WEEKS); });
+        document.getElementById('week-slider').addEventListener('input', function (e) {
+            setWindowStart(parseInt(e.target.value, 10));
+        });
+
+        document.querySelectorAll('.activity-type-toggle').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                hiddenTypes[cb.getAttribute('data-type')] = !cb.checked;
+                redraw();
+            });
+        });
+
+        redraw();
+    }
+</script>
+</body>
+</html>

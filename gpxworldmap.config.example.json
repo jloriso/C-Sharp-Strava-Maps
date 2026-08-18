@@ -2,5 +2,5 @@
   "GpxFolder": "path/to/your/activity-folder",
   "CsvFile": "path/to/activities.csv",
   "OutputHeatmapHtml": "heatmaps/standard_heatmap.html",
-  "OutputLineMapHtml": "heatmaps/line_map.html"
+  "OutputLineMapHtml": "heatmaps/linemap.html"
 }

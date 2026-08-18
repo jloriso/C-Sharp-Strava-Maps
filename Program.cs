@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,20 +9,20 @@ using System.Text;
 /// Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
 /// extracts tracks/routes/waypoints, optionally joins each one against a Strava-style
 /// activities CSV (matched by the numeric ID in the CSV's Filename column, falling
-/// back to Activity ID), and produces two standalone map pages:
+/// back to Activity ID), and produces three pages, all served locally and linked
+/// via a shared nav bar:
 ///
+///   - a Strava-style weekly mileage chart, filterable by Run/Bike/Other and
+///     scrollable back through the full history (WeeklyMileageDataBuilder /
+///     WeeklyMileageHtmlBuilder) -- served as the site's home page ("/"),
 ///   - a frequency heatmap of every recorded GPS point (HeatmapDataBuilder /
 ///     HeatmapHtmlBuilder), and
-///   - a line map of every route, colored by activity type and weighted/opacity-
-///     scaled by how many times that stretch of road/trail has been travelled
-///     (RouteFrequencyMapBuilder / LineMapHtmlBuilder),
-///
-/// both served locally (for OSM tile-referer reasons) with a Chicago-centered
-/// default view, per-activity-type checkboxes, and a "jump to" location control.
-/// This mirrors the reference Python heatmapController.py / linemapController.py.
+///   - a line map of every route, colored by category (Run/Bike/Other) and
+///     weighted/opacity-scaled by how many times that stretch of road/trail has been travelled
+///     (RouteFrequencyMapBuilder / LineMapHtmlBuilder).
 ///
 /// Usage:
-///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [--config path.json]
+///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [weekly-mileage-output.html] [--config path.json]
 /// </summary>
 class Program
 {
@@ -68,16 +69,25 @@ class Program
             try
             {
                 var parsed = ParseActivityFile(file, name);
-                var track = new ActivityTrack { ActivityId = id, Type = meta.Type, Color = meta.Color };
+                var track = new ActivityTrack
+                {
+                    ActivityId = id,
+                    Type = meta.Type,
+                    Color = meta.Color,
+                    ActivityDate = ParseActivityDate(meta.Date)
+                };
 
+                double distanceMeters = 0;
                 foreach (var seg in parsed.Segments)
                 {
                     if (seg.Count < 2) continue;
                     track.Segments.Add(seg);
                     track.AllPoints.AddRange(seg);
+                    distanceMeters += GeoDistance.PolylineLengthMeters(seg);
                 }
                 foreach (var pt in parsed.Points)
                     track.AllPoints.Add((pt.Lat, pt.Lon));
+                track.DistanceMeters = distanceMeters;
 
                 if (track.AllPoints.Count > 0) tracks.Add(track);
 
@@ -98,25 +108,50 @@ class Program
             return 1;
         }
 
-        var typeColors = tracks.Select(t => t.Type).Distinct().OrderByDescending(t => t, StringComparer.OrdinalIgnoreCase)
-            .Select(t => (Type: t, Color: ActivityColors.ColorForType(t))).ToList();
+        // Fixed Run/Bike/Other categories for maps + weekly mileage -- see
+        // ActivityCategory. Always all three, in this order, regardless of which
+        // raw types are actually present.
+        var categoryColors = ActivityCategory.OrderedCategories
+            .Select(c => (Type: c, Color: ActivityCategory.ColorForCategory(c))).ToList();
+
         var locations = DefaultLocations.Standard();
+
+        // Every page's nav bar needs to know where the other two live. The
+        // Weekly Mileage chart is served at the site root ("/"), since it's now
+        // the home page (see LocalWebServer.Serve below); the other two use
+        // whatever filenames you've configured, so hrefs are computed from the
+        // actual configured paths rather than hardcoded, and stay correct no
+        // matter what you rename OutputHeatmapHtml/OutputLineMapHtml to.
+        string heatmapHref = Path.GetFileName(config.OutputHeatmapHtml);
+        string lineMapHref = Path.GetFileName(config.OutputLineMapHtml);
+        const string weeklyMileageHref = "/";
 
         Console.WriteLine("\nBuilding heatmap...");
         var heat = HeatmapDataBuilder.Build(tracks);
-        string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(heat.ByTypeJs, typeColors, locations);
+        string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(heat.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref);
 
         Console.WriteLine("Building line map (computing route frequency)...");
         var lineData = RouteFrequencyMapBuilder.Build(tracks);
-        string linemapHtml = LineMapHtmlBuilder.BuildHtml(lineData.ByTypeJs, typeColors, locations);
+        string linemapHtml = LineMapHtmlBuilder.BuildHtml(lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref);
+
+        Console.WriteLine("Building weekly mileage chart...");
+        var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
+        if (weeklyMileage.SkippedForMissingDate > 0)
+            Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
+                               "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
+        string weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
+            weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors, heatmapHref, lineMapHref, weeklyMileageHref);
 
         WriteFile(config.OutputHeatmapHtml, heatmapHtml);
         WriteFile(config.OutputLineMapHtml, linemapHtml);
+        WriteFile(config.OutputWeeklyMileageHtml, weeklyMileageHtml);
 
-        LocalWebServer.Serve(new Dictionary<string, string>
+        // The Weekly Mileage page is served as the home page ("/"); the heatmap
+        // and line map are served under their configured filenames alongside it.
+        LocalWebServer.Serve(weeklyMileageHtml, new Dictionary<string, string>
         {
-            [Path.GetFileName(config.OutputHeatmapHtml)] = heatmapHtml,
-            [Path.GetFileName(config.OutputLineMapHtml)] = linemapHtml,
+            [heatmapHref] = heatmapHtml,
+            [lineMapHref] = linemapHtml,
         });
         return 0;
     }
@@ -188,20 +223,28 @@ class Program
         if (byFilenameId.TryGetValue(id, out var record) || byActivityId.TryGetValue(id, out record))
         {
             meta.Name = string.IsNullOrWhiteSpace(record.Name) ? id : record.Name;
+            meta.Type = string.IsNullOrWhiteSpace(record.Type) ? "Unknown" : record.Type;
             meta.Date = record.Date;
             meta.Description = record.Description;
-
-            string rawType = string.IsNullOrWhiteSpace(record.Type) ? "Unknown" : record.Type;
-
-            bool isRunOrRide =
-                rawType.Equals("Run", StringComparison.OrdinalIgnoreCase) ||
-                rawType.Equals("Ride", StringComparison.OrdinalIgnoreCase);
-
-            meta.Type = isRunOrRide ? rawType : "Other";
         }
 
         meta.Color = ActivityColors.ColorForType(meta.Type);
         return meta;
+    }
+
+    /// <summary>Parses the CSV's free-form Activity Date column into a DateTime for
+    /// the weekly mileage chart. Tries invariant culture first (handles the most
+    /// common Strava export format), then falls back to the current culture, since
+    /// export locale can vary; returns null (rather than throwing) if neither
+    /// parses, so one malformed date doesn't take down the whole run -- that
+    /// activity is simply excluded from the mileage chart (see
+    /// WeeklyMileageDataBuilder.SkippedForMissingDate).</summary>
+    static DateTime? ParseActivityDate(string date)
+    {
+        if (string.IsNullOrWhiteSpace(date)) return null;
+        if (DateTime.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d1)) return d1;
+        if (DateTime.TryParse(date, CultureInfo.CurrentCulture, DateTimeStyles.None, out var d2)) return d2;
+        return null;
     }
 
     static void PrintMatchSummary(
@@ -217,7 +260,7 @@ class Program
         int csvOnlyCount = totalCsvRows - matchedIds.Count;
 
         Console.WriteLine($"\n{matchedIds.Count} activity file(s) matched a CSV row.");
-        Console.WriteLine($"~{csvOnlyCount} CSV row(s) have no corresponding activity files.");
+        Console.WriteLine($"~{csvOnlyCount} CSV row(s) have no corresponding activity file (expected, per your note).");
         if (unmatchedGpxCount > 0)
             Console.WriteLine($"{unmatchedGpxCount} activity file(s) had no matching CSV row (check the Filename/Activity ID columns for that activity).");
     }

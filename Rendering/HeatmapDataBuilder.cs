@@ -6,9 +6,9 @@ using System.Text;
 
 /// <summary>
 /// Aggregates raw track points into weighted heatmap points, one bucket per
-/// activity type. Points are rounded to a fixed precision and counted; then each
-/// type's counts are transformed into normalized heat weights using percentile
-/// clipping + log scaling for better visual contrast.
+/// category (Run/Bike/Other). Points are rounded to a fixed precision and counted;
+/// then each category's counts are transformed into normalized heat weights using
+/// percentile clipping + log scaling for better visual contrast.
 /// </summary>
 public static class HeatmapDataBuilder
 {
@@ -34,10 +34,12 @@ public static class HeatmapDataBuilder
 
         foreach (var track in tracks)
         {
-            if (!byType.TryGetValue(track.Type, out var counts))
+            // Collapse raw activity types into fixed map categories.
+            var category = ActivityCategory.CategoryForType(track.Type);
+            if (!byType.TryGetValue(category, out var counts))
             {
                 counts = new Dictionary<(double, double), int>();
-                byType[track.Type] = counts;
+                byType[category] = counts;
             }
 
             foreach (var (lat, lon) in track.AllPoints)

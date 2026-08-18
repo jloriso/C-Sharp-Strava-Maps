@@ -15,10 +15,10 @@ public static class AppConfigLoader
     /// if given.
     ///
     /// Positional args are: [gpx-folder] [activities.csv] [heatmap-output.html]
-    /// [linemap-output.html] -- the csv is recognized by its ".csv" extension and
-    /// can appear anywhere after the folder; the first non-csv positional after the
-    /// folder is taken as the heatmap output path, the second as the line map
-    /// output path.
+    /// [linemap-output.html] [weekly-mileage-output.html] -- the csv is recognized
+    /// by its ".csv" extension and can appear anywhere after the folder; the
+    /// first, second, and third non-csv positional args after the folder are
+    /// taken as the heatmap, line map, and weekly mileage output paths respectively.
     /// </summary>
     public static AppConfig Load(string[] args)
     {
@@ -54,6 +54,7 @@ public static class AppConfigLoader
                     if (!string.IsNullOrWhiteSpace(fromFile.CsvFile)) config.CsvFile = fromFile.CsvFile;
                     if (!string.IsNullOrWhiteSpace(fromFile.OutputHeatmapHtml)) config.OutputHeatmapHtml = fromFile.OutputHeatmapHtml!;
                     if (!string.IsNullOrWhiteSpace(fromFile.OutputLineMapHtml)) config.OutputLineMapHtml = fromFile.OutputLineMapHtml!;
+                    if (!string.IsNullOrWhiteSpace(fromFile.OutputWeeklyMileageHtml)) config.OutputWeeklyMileageHtml = fromFile.OutputWeeklyMileageHtml!;
                 }
                 Console.WriteLine($"Loaded config from {resolvedConfigPath}");
             }
@@ -79,17 +80,16 @@ public static class AppConfigLoader
             if (arg.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
                 config.CsvFile = arg;
+                continue;
             }
-            else if (outputsSeen == 0)
+
+            switch (outputsSeen)
             {
-                config.OutputHeatmapHtml = arg;
-                outputsSeen++;
+                case 0: config.OutputHeatmapHtml = arg; break;
+                case 1: config.OutputLineMapHtml = arg; break;
+                default: config.OutputWeeklyMileageHtml = arg; break;
             }
-            else
-            {
-                config.OutputLineMapHtml = arg;
-                outputsSeen++;
-            }
+            outputsSeen++;
         }
 
         if (string.IsNullOrWhiteSpace(config.GpxFolder))
@@ -102,6 +102,7 @@ public static class AppConfigLoader
         Console.WriteLine($"CSV file: {(config.CsvFile != null ? Path.GetFullPath(config.CsvFile) : "(none)")}");
         Console.WriteLine($"Heatmap output: {Path.GetFullPath(config.OutputHeatmapHtml)}");
         Console.WriteLine($"Line map output: {Path.GetFullPath(config.OutputLineMapHtml)}");
+        Console.WriteLine($"Weekly mileage output: {Path.GetFullPath(config.OutputWeeklyMileageHtml)}");
 
         return config;
     }
