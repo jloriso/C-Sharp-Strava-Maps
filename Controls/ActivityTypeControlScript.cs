@@ -29,7 +29,7 @@ public static class ActivityTypeControlScript
                 .Append("</label>");
         }
 
-        return HtmlTemplateLoader.Load("Controls/Templates", "activityTypeControl.js")
+        return HtmlTemplateLoader.Load("Controls/Templates", "ActivityTypeControl.js")
             .Replace("{{ACTIVITY_TYPE_ROWS_HTML}}", rows.ToString());
     }
 

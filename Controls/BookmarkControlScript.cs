@@ -34,7 +34,7 @@ public static class BookmarkControlScript
         }
         lookup.Append("}");
 
-        return HtmlTemplateLoader.Load("Controls/Templates", "bookmarkControl.js")
+        return HtmlTemplateLoader.Load("Controls/Templates", "BookmarkControl.js")
             .Replace("{{BOOKMARK_LOCATIONS_JS}}", lookup.ToString())
             .Replace("{{BOOKMARK_BUTTONS_HTML}}", buttons.ToString());
     }
