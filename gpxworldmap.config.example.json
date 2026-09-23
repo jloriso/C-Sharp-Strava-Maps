@@ -2,5 +2,6 @@
   "GpxFolder": "path/to/your/activity-folder",
   "CsvFile": "path/to/activities.csv",
   "OutputHeatmapHtml": "heatmaps/standard_heatmap.html",
-  "OutputLineMapHtml": "heatmaps/linemap.html"
+  "OutputLineMapHtml": "heatmaps/linemap.html",
+  "CartoApiKey": "your-carto-api-key"
 }

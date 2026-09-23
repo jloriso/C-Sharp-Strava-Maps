@@ -55,6 +55,7 @@ public static class AppConfigLoader
                     if (!string.IsNullOrWhiteSpace(fromFile.OutputHeatmapHtml)) config.OutputHeatmapHtml = fromFile.OutputHeatmapHtml!;
                     if (!string.IsNullOrWhiteSpace(fromFile.OutputLineMapHtml)) config.OutputLineMapHtml = fromFile.OutputLineMapHtml!;
                     if (!string.IsNullOrWhiteSpace(fromFile.OutputWeeklyMileageHtml)) config.OutputWeeklyMileageHtml = fromFile.OutputWeeklyMileageHtml!;
+                    if (!string.IsNullOrWhiteSpace(fromFile.CartoApiKey)) config.CartoApiKey = fromFile.CartoApiKey;
                 }
                 Console.WriteLine($"Loaded config from {resolvedConfigPath}");
             }

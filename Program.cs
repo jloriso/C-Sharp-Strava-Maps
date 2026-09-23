@@ -128,12 +128,14 @@ class Program
 
         Console.WriteLine("\nBuilding heatmap...");
         var heat = HeatmapDataBuilder.Build(tracks);
-        string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(heat.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref);
+        string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(
+            heat.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
 
         Console.WriteLine("Building line map (computing route frequency)...");
         var lineData = RouteFrequencyMapBuilder.Build(tracks);
-        string linemapHtml = LineMapHtmlBuilder.BuildHtml(lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref);
-
+        string linemapHtml = LineMapHtmlBuilder.BuildHtml(
+            lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
+        
         Console.WriteLine("Building weekly mileage chart...");
         var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
         if (weeklyMileage.SkippedForMissingDate > 0)

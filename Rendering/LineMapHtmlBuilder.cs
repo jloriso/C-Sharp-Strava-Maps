@@ -13,7 +13,8 @@ public static class LineMapHtmlBuilder
         List<MapLocation> locations,
         string heatmapHref,
         string lineMapHref,
-        string weeklyMileageHref)
+        string weeklyMileageHref,
+        string? cartoApiKey)
     {
         string bookmarkScript = BookmarkControlScript.Build(locations);
         string typeControlScript = ActivityTypeControlScript.Build(types);
@@ -22,6 +23,9 @@ public static class LineMapHtmlBuilder
         var initial = locations.FirstOrDefault() ?? new MapLocation { Lat = 20.0, Lon = 0.0, Zoom = 3 };
         string initialViewJs = $"[{(initial.Lat)}, {(initial.Lon)}], {initial.Zoom}";
         string navBarHtml = NavBarBuilder.BuildHtml("linemap", weeklyMileageHref, heatmapHref, lineMapHref);
+        string cartoApiQuery = string.IsNullOrWhiteSpace(cartoApiKey)
+            ? ""
+            : "?key=" + Uri.EscapeDataString(cartoApiKey);
 
         return HtmlTemplateLoader.Load("Rendering/Templates","linemap.html")
             .Replace("{{LINE_DATA_BY_TYPE_JS}}", lineDataByTypeJs)
@@ -30,7 +34,8 @@ public static class LineMapHtmlBuilder
             .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)
             .Replace("{{HOME_CONTROL_SCRIPT}}", homeControlScript)
             .Replace("{{INITIAL_VIEW_JS}}", initialViewJs)
-            .Replace("{{NAV_BAR_HTML}}", navBarHtml);
+            .Replace("{{NAV_BAR_HTML}}", navBarHtml)
+            .Replace("{{CARTO_API_QUERY}}", cartoApiQuery);
     }
 
     static string BuildTypeColorsJs(List<(string Type, string Color)> types)

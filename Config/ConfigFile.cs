@@ -7,4 +7,5 @@ class ConfigFile
     public string? OutputHeatmapHtml { get; set; }
     public string? OutputLineMapHtml { get; set; }
     public string? OutputWeeklyMileageHtml { get; set; }
+    public string? CartoApiKey { get; set; }
 }

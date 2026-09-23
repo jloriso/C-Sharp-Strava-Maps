@@ -7,4 +7,5 @@ public class AppConfig
     public string OutputHeatmapHtml = "heatmaps/standard_heatmap.html";
     public string OutputLineMapHtml = "heatmaps/linemap.html";
     public string OutputWeeklyMileageHtml = "heatmaps/weekly_mileage.html";
+    public string? CartoApiKey;
 }
