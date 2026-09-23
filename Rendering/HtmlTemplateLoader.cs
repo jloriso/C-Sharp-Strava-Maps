@@ -6,11 +6,11 @@ using System.Text;
 
 /// <summary>
 /// Loads an HTML page template that lives in its own file under
-/// Rendering/Templates/ (e.g. heatmap.html, linemap.html), rather than being
+/// Features/feature/ (e.g. heatmap.html, linemap.html), rather than being
 /// embedded as a giant C# verbatim string inside the builder class itself.
 ///
 /// Templates are compiled in as <b>embedded resources</b> (see the
-/// &lt;EmbeddedResource Include="Rendering/Templates/*.html" /&gt; entry in the
+/// &lt;EmbeddedResource Include="Features/*/*.html" /&gt; entry in the
 /// .csproj), so the page markup ships inside the single compiled assembly --
 /// there's no risk of a template file going missing at runtime regardless of the
 /// working directory, or whether the app was run via `dotnet run` or published as

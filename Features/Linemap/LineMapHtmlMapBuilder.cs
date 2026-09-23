@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
+
+namespace GpxWorldMap.Features.Linemap;
 
 /// <summary>
 /// Builds the "well-worn route" line data for the line map, one FeatureCollection
@@ -34,7 +33,7 @@ using System.Text;
 /// noticeable when zoomed in. Averaging real points keeps the smoothing/matching
 /// benefit of the grid without that artifact.
 /// </summary>
-public static class RouteFrequencyMapBuilder
+public static class LineMapHtmlMapBuilder
 {
     // Distance (in meters) that consecutive points get snapped to before being
     // treated as graph nodes. This is the main lever for GPS noise: a consumer
@@ -230,11 +229,11 @@ public static class RouteFrequencyMapBuilder
         coords.Append("]");
 
         return "{\"type\":\"Feature\",\"properties\":{"
-             + "\"minCount\":" + minCount
-             + ",\"maxCount\":" + maxCount
-             + ",\"weight\":" + TierWeights[tier].ToString("F2", CultureInfo.InvariantCulture)
-             + ",\"opacity\":" + TierOpacities[tier].ToString("F2", CultureInfo.InvariantCulture)
-             + "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":" + coords + "}}";
+               + "\"minCount\":" + minCount
+               + ",\"maxCount\":" + maxCount
+               + ",\"weight\":" + TierWeights[tier].ToString("F2", CultureInfo.InvariantCulture)
+               + ",\"opacity\":" + TierOpacities[tier].ToString("F2", CultureInfo.InvariantCulture)
+               + "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":" + coords + "}}";
     }
 
     static void AddAdjacency(Dictionary<Node, List<(Node, EdgeKey)>> adjacency, Node from, Node to, EdgeKey key)

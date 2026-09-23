@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-/// <summary>Builds the standalone line map page by loading the Rendering/Templates/
+/// <summary>Builds the standalone line map page by loading the Features/Linemap/
 /// linemap.html template and substituting its {{TOKEN}} placeholders with the
 /// server-computed route data, control scripts, and shared nav bar (linking to the
 /// Weekly Mileage home page and the Heatmap page).</summary>
@@ -27,7 +27,7 @@ public static class LineMapHtmlBuilder
             ? ""
             : "?key=" + Uri.EscapeDataString(cartoApiKey);
 
-        return HtmlTemplateLoader.Load("Rendering/Templates","linemap.html")
+        return HtmlTemplateLoader.Load("Features/Linemap","linemap.html")
             .Replace("{{LINE_DATA_BY_TYPE_JS}}", lineDataByTypeJs)
             .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)
             .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)

@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+namespace GpxWorldMap.Rendering;
 
 /// <summary>Picks a consistent color per activity type, so e.g. every Run is the
 /// same color and every Ride is the same (different) color.</summary>
@@ -8,22 +7,9 @@ public static class ActivityColors
     static readonly Dictionary<string, string> KnownTypeColors = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Run"] = "#fc4c02",
-        ["TrailRun"] = "#ff8c00",
-        ["Walk"] = "#8bc34a",
-        ["Hike"] = "#8bc34a",
         ["Ride"] = "#00b0ff",
-        ["VirtualRide"] = "#00b0ff",
-        ["GravelRide"] = "#9a6324",
-        ["MountainBikeRide"] = "#800000",
         ["Swim"] = "#911eb4",
-        ["Workout"] = "#808000",
-        ["WeightTraining"] = "#000075",
-        ["Yoga"] = "#f032e6",
-        ["AlpineSki"] = "#a9a9a9",
-        ["Snowboard"] = "#000000",
-        ["Kayaking"] = "#009999",
-        ["Rowing"] = "#bcf60c",
-        ["RockClimbing"] = "#800080",
+        ["Other"] = "#808080",
     };
 
     static readonly string[] FallbackPalette =

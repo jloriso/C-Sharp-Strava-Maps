@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using GpxWorldMap.Features.Linemap;
+using GpxWorldMap.Rendering;
 
 /// <summary>
 /// Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
@@ -132,7 +134,7 @@ class Program
             heat.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
 
         Console.WriteLine("Building line map (computing route frequency)...");
-        var lineData = RouteFrequencyMapBuilder.Build(tracks);
+        var lineData = LineMapHtmlMapBuilder.Build(tracks);
         string linemapHtml = LineMapHtmlBuilder.BuildHtml(
             lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
         

@@ -11,7 +11,7 @@
   <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="Models\" />
-    <Folder Include="Readers\" />
+    <Folder Include="Input\" />
     <Folder Include="Server\" />
   </ItemGroup>
   <ItemGroup>
@@ -25,10 +25,16 @@
     <EmbeddedResource Remove="bin\**" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Rendering/Templates/*.html" CopyToOutputDirectory="PreserveNewest"/>
-<!--
-    <EmbeddedResource Include="Rendering/Templates/*.html" />
--->
+    <Content Include="Features/*/*.html" CopyToOutputDirectory="PreserveNewest"/>
+    <Content Update="Features\Heatmap\heatmap.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Features\Linemap\linemap.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Features\WeeklyMileage\weeklymileage.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Controls/Templates/*.js" CopyToOutputDirectory="PreserveNewest" />

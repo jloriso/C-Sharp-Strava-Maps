@@ -2,7 +2,7 @@
 using System.Text;
 
 /// <summary>Builds the weekly mileage chart page -- served as the site's home page
-/// (see LocalWebServer.Serve) -- by loading the Rendering/Templates/
+/// (see LocalWebServer.Serve) -- by loading the Features/WeeklyMileage/
 /// weeklymileage.html template and substituting its {{TOKEN}} placeholders with
 /// the server-computed weekly series, per-category checkbox markup, and shared
 /// nav bar (linking to the Heatmap and Line Map pages).
@@ -26,7 +26,7 @@ public static class WeeklyMileageHtmlBuilder
         string checkboxesHtml = BuildCheckboxesHtml(categories);
         string navBarHtml = NavBarBuilder.BuildHtml("weeklymileage", weeklyMileageHref, heatmapHref, lineMapHref);
 
-        return HtmlTemplateLoader.Load("Rendering/Templates", "weeklymileage.html")
+        return HtmlTemplateLoader.Load("Features/WeeklyMileage", "weeklymileage.html")
             .Replace("{{WEEKS_JS}}", weeksJs)
             .Replace("{{SERIES_BY_TYPE_JS}}", seriesByTypeJs)
             .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)

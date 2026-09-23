@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-/// <summary>Builds the standalone heatmap page by loading the Rendering/Templates/
+/// <summary>Builds the standalone heatmap page by loading the Features/Heatmap/
 /// heatmap.html template and substituting its {{TOKEN}} placeholders with the
 /// server-computed heat data, control scripts, and shared nav bar (linking to the
 /// Weekly Mileage home page and the Line Map page).</summary>
@@ -25,7 +25,7 @@ public static class HeatmapHtmlBuilder
             ? ""
             : "?key=" + Uri.EscapeDataString(cartoApiKey);
 
-        return HtmlTemplateLoader.Load("Rendering/Templates","heatmap.html")
+        return HtmlTemplateLoader.Load("Features/Heatmap","heatmap.html")
             .Replace("{{POINTS_BY_TYPE_JS}}", pointsByTypeJs)
             .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
             .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)
