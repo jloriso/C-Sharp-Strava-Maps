@@ -1,4 +1,8 @@
-using System.Collections.Generic;
+using GpxWorldMap.Controls;
+using GpxWorldMap.Models;
+using GpxWorldMap.Rendering;
+
+namespace GpxWorldMap.Features.Heatmap;
 
 /// <summary>Builds the standalone heatmap page by loading the Features/Heatmap/
 /// heatmap.html template and substituting its {{TOKEN}} placeholders with the

@@ -1,5 +1,7 @@
-using System.Collections.Generic;
 using System.Text;
+using GpxWorldMap.Rendering;
+
+namespace GpxWorldMap.Controls;
 
 /// <summary>
 /// Builds the JS for a Leaflet control with one checkbox per activity type (colored
@@ -33,5 +35,5 @@ public static class ActivityTypeControlScript
             .Replace("{{ACTIVITY_TYPE_ROWS_HTML}}", rows.ToString());
     }
 
-    static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+    private static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
 }

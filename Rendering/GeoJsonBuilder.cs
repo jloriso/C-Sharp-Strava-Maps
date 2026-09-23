@@ -1,7 +1,8 @@
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
+using GpxWorldMap.Models;
+
+namespace GpxWorldMap.Rendering;
 
 /// <summary>Turns parsed GPX geometry + activity metadata into GeoJSON Feature
 /// strings, ready to be joined into a FeatureCollection.</summary>
@@ -32,11 +33,11 @@ public static class GeoJsonBuilder
                ",\"geometry\":{\"type\":\"Point\",\"coordinates\":[" + Fmt(pt.Lon) + "," + Fmt(pt.Lat) + "]}}";
     }
 
-    static string PropsJson(ActivityMeta meta)
+    private static string PropsJson(ActivityMeta meta)
     {
         string popup = "<b>" + EscapeHtml(meta.Name) + "</b><br>" +
-                        EscapeHtml(meta.Type) +
-                        (string.IsNullOrWhiteSpace(meta.Date) ? "" : " &middot; " + EscapeHtml(meta.Date));
+                       EscapeHtml(meta.Type) +
+                       (string.IsNullOrWhiteSpace(meta.Date) ? "" : " &middot; " + EscapeHtml(meta.Date));
         if (!string.IsNullOrWhiteSpace(meta.Description))
         {
             string desc = meta.Description.Replace("\r\n", "\n").Replace("\r", "\n");
@@ -49,13 +50,13 @@ public static class GeoJsonBuilder
                ",\"popup\":" + JsonStr(popup) + "}";
     }
 
-    static string Fmt(double d) => d.ToString("R", CultureInfo.InvariantCulture);
+    private static string Fmt(double d) => d.ToString("R", CultureInfo.InvariantCulture);
 
     // Proper JSON string escaping -- notably including newlines/carriage returns and
     // other control characters. Without this, a literal line break embedded in a CSV
     // field (e.g. a multi-line Activity Description) would land inside a JS string
     // literal verbatim, which is invalid syntax and breaks the whole page.
-    static string JsonStr(string s)
+    private static string JsonStr(string s)
     {
         var sb = new StringBuilder(s.Length + 2);
         sb.Append('"');
@@ -80,6 +81,6 @@ public static class GeoJsonBuilder
         return sb.ToString();
     }
 
-    static string EscapeHtml(string s) =>
+    private static string EscapeHtml(string s) =>
         s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
 }

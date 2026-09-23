@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+
+namespace GpxWorldMap.Server;
 
 /// <summary>Serves the generated pages over http://localhost and opens the home
 /// page in the default browser. Serving locally (rather than opening the HTML
@@ -54,7 +54,7 @@ public static class LocalWebServer
         }
     }
 
-    static int GetFreePort()
+    private static int GetFreePort()
     {
         var probe = new TcpListener(IPAddress.Loopback, 0);
         probe.Start();
@@ -63,7 +63,7 @@ public static class LocalWebServer
         return port;
     }
 
-    static void TryOpenBrowser(string url)
+    private static void TryOpenBrowser(string url)
     {
         try
         {

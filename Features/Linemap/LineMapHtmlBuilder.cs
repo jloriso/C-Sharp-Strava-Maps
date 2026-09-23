@@ -1,5 +1,9 @@
-using System.Collections.Generic;
 using System.Text;
+using GpxWorldMap.Controls;
+using GpxWorldMap.Models;
+using GpxWorldMap.Rendering;
+
+namespace GpxWorldMap.Features.Linemap;
 
 /// <summary>Builds the standalone line map page by loading the Features/Linemap/
 /// linemap.html template and substituting its {{TOKEN}} placeholders with the
@@ -38,7 +42,7 @@ public static class LineMapHtmlBuilder
             .Replace("{{CARTO_API_QUERY}}", cartoApiQuery);
     }
 
-    static string BuildTypeColorsJs(List<(string Type, string Color)> types)
+    private static string BuildTypeColorsJs(List<(string Type, string Color)> types)
     {
         var sb = new StringBuilder("{");
         bool first = true;

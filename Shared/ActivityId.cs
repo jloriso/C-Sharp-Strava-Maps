@@ -1,4 +1,4 @@
-using System.IO;
+namespace GpxWorldMap.Shared;
 
 /// <summary>Extracts the leading ID from a filename or path by taking everything
 /// before the first '.', e.g. "20483719126.fit.gz" -> "20483719126". Used both

@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+namespace GpxWorldMap.Rendering;
+
 /// <summary>
 /// Builds the small top nav bar shared by all three generated pages (Weekly
 /// Mileage / Heatmap / Line Map), so each page can link to the other two.
@@ -25,11 +27,11 @@ public static class NavBarBuilder
         return sb.ToString();
     }
 
-    static void AppendLink(StringBuilder sb, string label, string href, bool active)
+    private static void AppendLink(StringBuilder sb, string label, string href, bool active)
     {
         sb.Append("<a class=\"nav-link").Append(active ? " active" : "").Append("\" href=\"").Append(Esc(href)).Append("\">")
             .Append(Esc(label)).Append("</a>");
     }
 
-    static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+    private static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
 }

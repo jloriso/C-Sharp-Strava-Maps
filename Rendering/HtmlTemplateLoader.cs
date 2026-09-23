@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿namespace GpxWorldMap.Rendering;
 
 /// <summary>
 /// Loads an HTML page template that lives in its own file under

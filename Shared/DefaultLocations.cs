@@ -1,4 +1,6 @@
-using System.Collections.Generic;
+using GpxWorldMap.Models;
+
+namespace GpxWorldMap.Shared;
 
 /// <summary>The fixed set of locations offered by the "jump to" control on both the
 /// heatmap and line map pages.</summary>

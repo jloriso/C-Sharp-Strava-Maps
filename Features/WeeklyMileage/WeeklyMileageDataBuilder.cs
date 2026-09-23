@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text;
+using GpxWorldMap.Models;
+using GpxWorldMap.Shared;
+
+namespace GpxWorldMap.Features.WeeklyMileage;
 
 /// <summary>
 /// Aggregates activities into total mileage per week, broken out into three fixed
@@ -87,14 +88,14 @@ public static class WeeklyMileageDataBuilder
 
     /// <summary>Monday of the week containing <paramref name="date"/>, with time
     /// stripped.</summary>
-    static DateTime StartOfWeek(DateTime date)
+    private static DateTime StartOfWeek(DateTime date)
     {
         date = date.Date;
         int diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
         return date.AddDays(-diff);
     }
 
-    static string BuildWeeksJs(List<DateTime> weeks)
+    private static string BuildWeeksJs(List<DateTime> weeks)
     {
         var sb = new StringBuilder("[");
         for (int i = 0; i < weeks.Count; i++)
@@ -106,7 +107,7 @@ public static class WeeklyMileageDataBuilder
         return sb.ToString();
     }
 
-    static string BuildSeriesJs(Dictionary<string, double[]> seriesByCategory)
+    private static string BuildSeriesJs(Dictionary<string, double[]> seriesByCategory)
     {
         var sb = new StringBuilder("{");
         bool first = true;
@@ -130,5 +131,5 @@ public static class WeeklyMileageDataBuilder
         return sb.ToString();
     }
 
-    static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+    private static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 }

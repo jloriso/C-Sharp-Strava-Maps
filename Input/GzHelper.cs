@@ -1,6 +1,7 @@
-using System.IO;
 using System.IO.Compression;
 using System.Text;
+
+namespace GpxWorldMap.Input;
 
 /// <summary>Decompresses .gz files as either text (for GPX/TCX, which are XML)
 /// or raw bytes (for FIT, which is binary).</summary>

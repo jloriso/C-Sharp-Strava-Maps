@@ -1,11 +1,16 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
+using GpxWorldMap.Config;
+using GpxWorldMap.Features.Heatmap;
 using GpxWorldMap.Features.Linemap;
+using GpxWorldMap.Features.WeeklyMileage;
+using GpxWorldMap.Input;
+using GpxWorldMap.Models;
 using GpxWorldMap.Rendering;
+using GpxWorldMap.Server;
+using GpxWorldMap.Shared;
+
+namespace GpxWorldMap;
 
 /// <summary>
 /// Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
@@ -26,9 +31,9 @@ using GpxWorldMap.Rendering;
 /// Usage:
 ///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [weekly-mileage-output.html] [--config path.json]
 /// </summary>
-class Program
+public static class Program
 {
-    static int Main(string[] args)
+    public static int Main(string[] args)
     {
         var config = AppConfigLoader.Load(args);
 
@@ -59,7 +64,7 @@ class Program
             string name = Path.GetFileName(file);
             string id = ActivityId.FromPath(name);
 
-            var meta = ResolveMeta(id, activitiesByFilenameId!, activitiesByActivityId!, config.CsvFile != null);
+            var meta = ResolveMeta(id, activitiesByFilenameId!, activitiesByActivityId!);
             if (activitiesByFilenameId!.ContainsKey(id) || activitiesByActivityId!.ContainsKey(id))
                 matchedIds.Add(id);
             else if (config.CsvFile != null)
@@ -135,15 +140,15 @@ class Program
 
         Console.WriteLine("Building line map (computing route frequency)...");
         var lineData = LineMapHtmlMapBuilder.Build(tracks);
-        string linemapHtml = LineMapHtmlBuilder.BuildHtml(
+        var linemapHtml = LineMapHtmlBuilder.BuildHtml(
             lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
         
         Console.WriteLine("Building weekly mileage chart...");
         var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
         if (weeklyMileage.SkippedForMissingDate > 0)
             Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
-                               "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
-        string weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
+                              "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
+        var weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
             weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors, heatmapHref, lineMapHref, weeklyMileageHref);
 
         WriteFile(config.OutputHeatmapHtml, heatmapHtml);
@@ -160,7 +165,7 @@ class Program
         return 0;
     }
 
-    static void WriteFile(string path, string content)
+    private static void WriteFile(string path, string content)
     {
         string? dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
@@ -168,7 +173,7 @@ class Program
         Console.WriteLine($"Wrote {Path.GetFullPath(path)}");
     }
 
-    static string[] FindActivityFiles(string folder)
+    private static string[] FindActivityFiles(string folder)
     {
         return Directory.GetFiles(folder, "*.gz", SearchOption.TopDirectoryOnly)
             .Where(f => f.EndsWith(".gpx.gz", StringComparison.OrdinalIgnoreCase) ||
@@ -177,7 +182,7 @@ class Program
             .ToArray();
     }
 
-    static ParsedGpx ParseActivityFile(string path, string name)
+    private static ParsedGpx ParseActivityFile(string path, string name)
     {
         if (name.EndsWith(".gpx.gz", StringComparison.OrdinalIgnoreCase))
             return GpxReader.ParseGpx(GzHelper.DecompressText(path));
@@ -189,7 +194,7 @@ class Program
         throw new InvalidOperationException("Unrecognized activity file extension.");
     }
 
-    static (Dictionary<string, ActivityRecord>?, Dictionary<string, ActivityRecord>?) LoadActivities(string? csvFile)
+    private static (Dictionary<string, ActivityRecord>?, Dictionary<string, ActivityRecord>?) LoadActivities(string? csvFile)
     {
         var byFilenameId = new Dictionary<string, ActivityRecord>();
         var byActivityId = new Dictionary<string, ActivityRecord>();
@@ -216,11 +221,11 @@ class Program
         return (byFilenameId, byActivityId);
     }
 
-    static ActivityMeta ResolveMeta(
+    private static ActivityMeta ResolveMeta(
         string id,
         Dictionary<string, ActivityRecord> byFilenameId,
-        Dictionary<string, ActivityRecord> byActivityId,
-        bool csvProvided)
+        Dictionary<string, ActivityRecord> byActivityId
+        )
     {
         var meta = new ActivityMeta { Name = id, Type = "Unknown", Date = "", Description = "" };
 
@@ -243,7 +248,7 @@ class Program
     /// parses, so one malformed date doesn't take down the whole run -- that
     /// activity is simply excluded from the mileage chart (see
     /// WeeklyMileageDataBuilder.SkippedForMissingDate).</summary>
-    static DateTime? ParseActivityDate(string date)
+    private static DateTime? ParseActivityDate(string date)
     {
         if (string.IsNullOrWhiteSpace(date)) return null;
         if (DateTime.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d1)) return d1;
@@ -251,7 +256,7 @@ class Program
         return null;
     }
 
-    static void PrintMatchSummary(
+    private static void PrintMatchSummary(
         Dictionary<string, ActivityRecord> byFilenameId,
         Dictionary<string, ActivityRecord> byActivityId,
         HashSet<string> matchedIds,

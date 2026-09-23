@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace GpxWorldMap.Shared;
 
 /// <summary>Great-circle distance calculations between GPS coordinates, used to
 /// compute each activity's total mileage for the weekly mileage chart.</summary>
 public static class GeoDistance
 {
-    const double EarthRadiusMeters = 6_371_000.0;
-    const double MetersPerMile = 1609.344;
+    private const double EarthRadiusMeters = 6_371_000.0;
+    private const double MetersPerMile = 1609.344;
 
     /// <summary>Haversine distance between two lat/lon points, in meters. Accurate
     /// enough for activity-length totals (the ~0.5% error versus a full ellipsoidal
     /// model is far smaller than typical GPS positional error itself).</summary>
-    public static double MetersBetween(double lat1, double lon1, double lat2, double lon2)
+    private static double MetersBetween(double lat1, double lon1, double lat2, double lon2)
     {
         double dLat = ToRadians(lat2 - lat1);
         double dLon = ToRadians(lon2 - lon1);
@@ -34,5 +33,5 @@ public static class GeoDistance
 
     public static double MetersToMiles(double meters) => meters / MetersPerMile;
 
-    static double ToRadians(double degrees) => degrees * Math.PI / 180.0;
+    private static double ToRadians(double degrees) => degrees * Math.PI / 180.0;
 }

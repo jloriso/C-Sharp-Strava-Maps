@@ -4,7 +4,7 @@ namespace GpxWorldMap.Rendering;
 /// same color and every Ride is the same (different) color.</summary>
 public static class ActivityColors
 {
-    static readonly Dictionary<string, string> KnownTypeColors = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> KnownTypeColors = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Run"] = "#fc4c02",
         ["Ride"] = "#00b0ff",
@@ -12,7 +12,7 @@ public static class ActivityColors
         ["Other"] = "#808080",
     };
 
-    static readonly string[] FallbackPalette =
+    private static readonly string[] FallbackPalette =
     {
         "#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4",
         "#42d4f4", "#f032e6", "#469990", "#9a6324", "#800000",

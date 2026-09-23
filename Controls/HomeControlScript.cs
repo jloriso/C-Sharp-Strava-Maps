@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GpxWorldMap.Rendering;
+
+namespace GpxWorldMap.Controls;
 
 /// <summary>Builds JS for a Leaflet "Home" button control that navigates back to
 /// the local server index page.</summary>

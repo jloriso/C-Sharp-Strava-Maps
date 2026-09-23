@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
+using GpxWorldMap.Models;
+using GpxWorldMap.Shared;
+
+namespace GpxWorldMap.Input;
 
 /// <summary>Reads the activities CSV export and extracts just the columns this
 /// project needs, ignoring however many other columns the export has.</summary>
@@ -47,7 +47,7 @@ public static class CsvReader
     /// before the first '.' in the base filename.</summary>
     public static string ExtractIdFromFilename(string filenameField) => ActivityId.FromPath(filenameField);
 
-    static int FindColumn(List<string> header, string name)
+    private static int FindColumn(List<string> header, string name)
     {
         for (int i = 0; i < header.Count; i++)
             if (string.Equals(header[i], name, StringComparison.OrdinalIgnoreCase)) return i;
@@ -57,7 +57,7 @@ public static class CsvReader
     /// <summary>Minimal RFC-4180-ish CSV reader: handles quoted fields containing
     /// commas, escaped quotes (""), and embedded newlines -- all of which show up
     /// in Strava's "Activity Description" column.</summary>
-    static List<List<string>> ReadCsvRows(string path)
+    private static List<List<string>> ReadCsvRows(string path)
     {
         var rows = new List<List<string>>();
         var field = new StringBuilder();

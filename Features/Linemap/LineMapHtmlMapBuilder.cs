@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using GpxWorldMap.Models;
+using GpxWorldMap.Shared;
 
 namespace GpxWorldMap.Features.Linemap;
 
@@ -91,7 +93,7 @@ public static class LineMapHtmlMapBuilder
         return new Result { ByTypeJs = sb.ToString() };
     }
 
-    static string BuildTypeFeatureCollection(List<ActivityTrack> tracksOfType)
+    private static string BuildTypeFeatureCollection(List<ActivityTrack> tracksOfType)
     {
         var allPoints = tracksOfType.SelectMany(t => t.AllPoints).ToList();
         if (allPoints.Count == 0) return EmptyFeatureCollection;
@@ -189,7 +191,7 @@ public static class LineMapHtmlMapBuilder
     /// through) -- so merging never changes the route's actual shape or its
     /// frequency coloring, it only combines edges that would have rendered
     /// identically anyway.</summary>
-    static void ExtendChain(
+    private static void ExtendChain(
         List<Node> chain, bool forward, int tier,
         Dictionary<Node, List<(Node Neighbor, EdgeKey Key)>> adjacency,
         HashSet<EdgeKey> usedEdges,
@@ -215,7 +217,7 @@ public static class LineMapHtmlMapBuilder
         }
     }
 
-    static string BuildChainFeature(
+    private static string BuildChainFeature(
         List<Node> chain, Dictionary<Node, (double Lat, double Lon)> nodeCentroid,
         int tier, int minCount, int maxCount)
     {
@@ -236,17 +238,17 @@ public static class LineMapHtmlMapBuilder
                + "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":" + coords + "}}";
     }
 
-    static void AddAdjacency(Dictionary<Node, List<(Node, EdgeKey)>> adjacency, Node from, Node to, EdgeKey key)
+    private static void AddAdjacency(Dictionary<Node, List<(Node, EdgeKey)>> adjacency, Node from, Node to, EdgeKey key)
     {
         if (!adjacency.TryGetValue(from, out var list))
             adjacency[from] = list = new List<(Node, EdgeKey)>();
         list.Add((to, key));
     }
 
-    static int TierForCount(int count) =>
+    private static int TierForCount(int count) =>
         Math.Clamp((int)Math.Floor(Math.Log2(Math.Max(1, count))), 0, TierWeights.Length - 1);
 
-    static (double LatStep, double LonStep) GridSteps(double refLat)
+    private static (double LatStep, double LonStep) GridSteps(double refLat)
     {
         const double metersPerDegreeLat = 111_320.0;
         double metersPerDegreeLon = Math.Max(metersPerDegreeLat * Math.Cos(refLat * Math.PI / 180.0), 1.0);
@@ -257,7 +259,7 @@ public static class LineMapHtmlMapBuilder
     /// this doubles as simplification for GPS jitter. Every raw point is also
     /// accumulated into <paramref name="centroidSums"/> for whichever cell it fell
     /// into, regardless of collapsing -- see BuildTypeFeatureCollection for why.</summary>
-    static List<Node> SnapAndCollapse(
+    private static List<Node> SnapAndCollapse(
         List<(double Lat, double Lon)> points, double latStep, double lonStep,
         Dictionary<Node, (double SumLat, double SumLon, int Count)> centroidSums)
     {
@@ -274,15 +276,15 @@ public static class LineMapHtmlMapBuilder
         return cells;
     }
 
-    static Node ToCell((double Lat, double Lon) p, double latStep, double lonStep) =>
+    private static Node ToCell((double Lat, double Lon) p, double latStep, double lonStep) =>
         new((long)Math.Round(p.Lat / latStep), (long)Math.Round(p.Lon / lonStep));
 
-    static EdgeKey MakeEdgeKey(Node a, Node b)
+    private static EdgeKey MakeEdgeKey(Node a, Node b)
     {
         bool aFirst = a.Lat < b.Lat || (a.Lat == b.Lat && a.Lon <= b.Lon);
         return aFirst ? new EdgeKey(a.Lat, a.Lon, b.Lat, b.Lon) : new EdgeKey(b.Lat, b.Lon, a.Lat, a.Lon);
     }
 
-    static string Fmt(double d) => d.ToString("F6", CultureInfo.InvariantCulture);
-    static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+    private static string Fmt(double d) => d.ToString("F6", CultureInfo.InvariantCulture);
+    private static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 }

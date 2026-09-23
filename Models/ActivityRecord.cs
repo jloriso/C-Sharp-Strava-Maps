@@ -1,3 +1,5 @@
+namespace GpxWorldMap.Models;
+
 /// <summary>One row from the activities CSV (only the columns we actually use).</summary>
 public record ActivityRecord(
     string Id,

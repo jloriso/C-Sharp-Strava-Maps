@@ -1,5 +1,6 @@
-using System;
-using System.Collections.Generic;
+using GpxWorldMap.Models;
+
+namespace GpxWorldMap.Input;
 
 /// <summary>
 /// A minimal parser for Garmin's FIT binary format, just enough to pull GPS
@@ -18,22 +19,22 @@ using System.Collections.Generic;
 /// </summary>
 public static class FitReader
 {
-    struct FieldDef
+    private struct FieldDef
     {
         public byte FieldNumber;
         public byte Size;
         public bool IsDeveloperField;
     }
 
-    class DefinitionMessage
+    private class DefinitionMessage
     {
         public bool BigEndian;
         public ushort GlobalMessageNumber;
         public List<FieldDef> Fields = new();
     }
 
-    const int RecordGlobalMessageNumber = 20;
-    const int InvalidSint32 = 0x7FFFFFFF;
+    private const int RecordGlobalMessageNumber = 20;
+    private const int InvalidSint32 = 0x7FFFFFFF;
 
     public static ParsedGpx ParseFit(byte[] data)
     {
@@ -96,7 +97,7 @@ public static class FitReader
         return result;
     }
 
-    static DefinitionMessage ReadDefinitionMessage(byte[] data, int pos, bool hasDeveloperFields, out int consumed)
+    private static DefinitionMessage ReadDefinitionMessage(byte[] data, int pos, bool hasDeveloperFields, out int consumed)
     {
         int start = pos;
         pos++; // reserved byte
@@ -129,7 +130,7 @@ public static class FitReader
         return def;
     }
 
-    static (double? lat, double? lon, int consumed) ReadDataMessage(byte[] data, int pos, DefinitionMessage def)
+    private static (double? lat, double? lon, int consumed) ReadDataMessage(byte[] data, int pos, DefinitionMessage def)
     {
         int start = pos;
         double? lat = null, lon = null;
@@ -152,9 +153,9 @@ public static class FitReader
         return (lat, lon, pos - start);
     }
 
-    static ushort ReadUInt16LE(byte[] d, int o) => (ushort)(d[o] | (d[o + 1] << 8));
-    static ushort ReadUInt16BE(byte[] d, int o) => (ushort)((d[o] << 8) | d[o + 1]);
-    static uint ReadUInt32LE(byte[] d, int o) => (uint)(d[o] | (d[o + 1] << 8) | (d[o + 2] << 16) | (d[o + 3] << 24));
-    static int ReadInt32LE(byte[] d, int o) => d[o] | (d[o + 1] << 8) | (d[o + 2] << 16) | (d[o + 3] << 24);
-    static int ReadInt32BE(byte[] d, int o) => (d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3];
+    private static ushort ReadUInt16LE(byte[] d, int o) => (ushort)(d[o] | (d[o + 1] << 8));
+    private static ushort ReadUInt16BE(byte[] d, int o) => (ushort)((d[o] << 8) | d[o + 1]);
+    private static uint ReadUInt32LE(byte[] d, int o) => (uint)(d[o] | (d[o + 1] << 8) | (d[o + 2] << 16) | (d[o + 3] << 24));
+    private static int ReadInt32LE(byte[] d, int o) => d[o] | (d[o + 1] << 8) | (d[o + 2] << 16) | (d[o + 3] << 24);
+    private static int ReadInt32BE(byte[] d, int o) => (d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3];
 }

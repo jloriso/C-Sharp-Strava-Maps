@@ -1,6 +1,9 @@
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using GpxWorldMap.Models;
+using GpxWorldMap.Rendering;
+
+namespace GpxWorldMap.Controls;
 
 /// <summary>Builds the JS for a Leaflet control that lets the user jump the map to
 /// one of a fixed set of named locations (each with its own lat/lon/zoom), using one
@@ -24,13 +27,13 @@ public static class BookmarkControlScript
         {
             string activeClass = loc.Name == defaultSelection ? " active" : "";
             buttons.Append("<button type=\"button\" class=\"bookmark-btn").Append(activeClass)
-                   .Append("\" data-location=\"").Append(Esc(loc.Name)).Append("\">")
-                   .Append(Esc(loc.Name)).Append("</button>");
+                .Append("\" data-location=\"").Append(Esc(loc.Name)).Append("\">")
+                .Append(Esc(loc.Name)).Append("</button>");
 
             if (!first) lookup.Append(",");
             first = false;
             lookup.Append('"').Append(Esc(loc.Name)).Append("\":[")
-                  .Append(Fmt(loc.Lat)).Append(',').Append(Fmt(loc.Lon)).Append(',').Append(loc.Zoom).Append(']');
+                .Append(Fmt(loc.Lat)).Append(',').Append(Fmt(loc.Lon)).Append(',').Append(loc.Zoom).Append(']');
         }
         lookup.Append("}");
 
@@ -39,6 +42,6 @@ public static class BookmarkControlScript
             .Replace("{{BOOKMARK_BUTTONS_HTML}}", buttons.ToString());
     }
 
-    static string Fmt(double d) => d.ToString("R", CultureInfo.InvariantCulture);
-    static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+    private static string Fmt(double d) => d.ToString("R", CultureInfo.InvariantCulture);
+    private static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
 }

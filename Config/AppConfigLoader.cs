@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
+
+namespace GpxWorldMap.Config;
 
 public static class AppConfigLoader
 {
@@ -110,7 +108,7 @@ public static class AppConfigLoader
 
     /// <summary>Looks for the config file relative to the current working directory
     /// first, then relative to the running program's own directory.</summary>
-    static string? ResolveConfigPath(string configArg)
+    private static string? ResolveConfigPath(string configArg)
     {
         if (Path.IsPathRooted(configArg))
             return File.Exists(configArg) ? configArg : null;

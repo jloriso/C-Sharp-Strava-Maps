@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using GpxWorldMap.Rendering;
+
+namespace GpxWorldMap.Features.WeeklyMileage;
 
 /// <summary>Builds the weekly mileage chart page -- served as the site's home page
 /// (see LocalWebServer.Serve) -- by loading the Features/WeeklyMileage/
@@ -34,19 +36,19 @@ public static class WeeklyMileageHtmlBuilder
             .Replace("{{NAV_BAR_HTML}}", navBarHtml);
     }
 
-    static string BuildCheckboxesHtml(List<(string Type, string Color)> categories)
+    private static string BuildCheckboxesHtml(List<(string Type, string Color)> categories)
     {
         var sb = new StringBuilder();
         foreach (var (type, color) in categories)
         {
             sb.Append("<label><input type=\"checkbox\" class=\"activity-type-toggle\" data-type=\"")
-              .Append(Esc(type)).Append("\" checked><span class=\"swatch\" style=\"background:")
-              .Append(color).Append(";\"></span>").Append(Esc(type)).Append("</label>\n");
+                .Append(Esc(type)).Append("\" checked><span class=\"swatch\" style=\"background:")
+                .Append(color).Append(";\"></span>").Append(Esc(type)).Append("</label>\n");
         }
         return sb.ToString();
     }
 
-    static string BuildTypeColorsJs(List<(string Type, string Color)> categories)
+    private static string BuildTypeColorsJs(List<(string Type, string Color)> categories)
     {
         var sb = new StringBuilder("{");
         bool first = true;
@@ -60,5 +62,5 @@ public static class WeeklyMileageHtmlBuilder
         return sb.ToString();
     }
 
-    static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+    private static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
 }

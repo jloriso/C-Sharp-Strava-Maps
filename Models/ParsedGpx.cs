@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+namespace GpxWorldMap.Models;
 
 /// <summary>Track segments and standalone waypoints extracted from one activity
 /// file, regardless of whether it came from a GPX, TCX, or FIT source.</summary>

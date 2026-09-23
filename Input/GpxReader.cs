@@ -1,6 +1,8 @@
 using System.Globalization;
-using System.Linq;
 using System.Xml.Linq;
+using GpxWorldMap.Models;
+
+namespace GpxWorldMap.Input;
 
 /// <summary>Parses GPX XML (already decompressed) into tracks/routes/waypoints.</summary>
 public static class GpxReader
@@ -37,7 +39,7 @@ public static class GpxReader
         return result;
     }
 
-    static (double Lat, double Lon)? ReadPt(XElement el)
+    private static (double Lat, double Lon)? ReadPt(XElement el)
     {
         var latAttr = el.Attribute("lat");
         var lonAttr = el.Attribute("lon");

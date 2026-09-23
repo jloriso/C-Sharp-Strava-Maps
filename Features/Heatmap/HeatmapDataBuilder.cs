@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
+using GpxWorldMap.Models;
+using GpxWorldMap.Shared;
+
+namespace GpxWorldMap.Features.Heatmap;
 
 /// <summary>
 /// Aggregates raw track points into weighted heatmap points, one bucket per
@@ -52,7 +53,7 @@ public static class HeatmapDataBuilder
         return new Result { ByTypeJs = ToByTypeJs(byType, clampPercentile) };
     }
 
-    static string ToByTypeJs(
+    private static string ToByTypeJs(
         Dictionary<string, Dictionary<(double Lat, double Lon), int>> byType,
         double clampPercentile)
     {
@@ -65,15 +66,15 @@ public static class HeatmapDataBuilder
             firstType = false;
 
             sb.Append(JsonStr(kv.Key))
-              .Append(":")
-              .Append(ToPointArrayJs(kv.Value, clampPercentile));
+                .Append(":")
+                .Append(ToPointArrayJs(kv.Value, clampPercentile));
         }
 
         sb.Append("}");
         return sb.ToString();
     }
 
-    static string ToPointArrayJs(
+    private static string ToPointArrayJs(
         Dictionary<(double Lat, double Lon), int> counts,
         double clampPercentile)
     {
@@ -100,17 +101,17 @@ public static class HeatmapDataBuilder
             if (weight < 0.05) weight = 0.05;
 
             sb.Append('[')
-              .Append(Fmt(kv.Key.Lat)).Append(',')
-              .Append(Fmt(kv.Key.Lon)).Append(',')
-              .Append(Fmt(weight))
-              .Append(']');
+                .Append(Fmt(kv.Key.Lat)).Append(',')
+                .Append(Fmt(kv.Key.Lon)).Append(',')
+                .Append(Fmt(weight))
+                .Append(']');
         }
 
         sb.Append("]");
         return sb.ToString();
     }
 
-    static double Percentile(IEnumerable<int> values, double percentile)
+    private static double Percentile(IEnumerable<int> values, double percentile)
     {
         var arr = values.OrderBy(v => v).ToArray();
         if (arr.Length == 0) return 1.0;
@@ -129,6 +130,6 @@ public static class HeatmapDataBuilder
         return arr[lo] + (arr[hi] - arr[lo]) * t;
     }
 
-    static string Fmt(double d) => d.ToString("F6", CultureInfo.InvariantCulture);
-    static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+    private static string Fmt(double d) => d.ToString("F6", CultureInfo.InvariantCulture);
+    private static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 }

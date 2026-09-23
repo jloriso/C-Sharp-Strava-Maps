@@ -1,6 +1,8 @@
 using System.Globalization;
-using System.Linq;
 using System.Xml.Linq;
+using GpxWorldMap.Models;
+
+namespace GpxWorldMap.Input;
 
 /// <summary>Parses TCX XML (already decompressed) into tracks. TCX structures GPS
 /// data as Activity/Lap/Track/Trackpoint/Position/LatitudeDegrees+LongitudeDegrees;
@@ -25,7 +27,7 @@ public static class TcxReader
         return result;
     }
 
-    static (double Lat, double Lon)? ReadTrackpoint(XElement trackpoint)
+    private static (double Lat, double Lon)? ReadTrackpoint(XElement trackpoint)
     {
         var position = trackpoint.Elements().FirstOrDefault(e => e.Name.LocalName == "Position");
         if (position == null) return null;

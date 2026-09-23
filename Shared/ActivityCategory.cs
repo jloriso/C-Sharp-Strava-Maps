@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace GpxWorldMap.Shared;
 
 /// <summary>
 /// Collapses the many raw Strava/Garmin activity type strings (Run, TrailRun,
@@ -18,12 +17,12 @@ public static class ActivityCategory
     /// actually present in the data.</summary>
     public static readonly string[] OrderedCategories = { "Run", "Bike", "Other" };
 
-    static readonly HashSet<string> RunTypes = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> RunTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "Run", "TrailRun", "VirtualRun",
     };
 
-    static readonly HashSet<string> BikeTypes = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> BikeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "Ride", "VirtualRide", "GravelRide", "MountainBikeRide", "EBikeRide", "Velomobile", "Handcycle",
     };
