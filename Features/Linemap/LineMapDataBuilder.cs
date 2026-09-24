@@ -35,7 +35,7 @@ namespace GpxWorldMap.Features.Linemap;
 /// noticeable when zoomed in. Averaging real points keeps the smoothing/matching
 /// benefit of the grid without that artifact.
 /// </summary>
-public static class LineMapHtmlMapBuilder
+public static class LineMapDataBuilder
 {
     // Distance (in meters) that consecutive points get snapped to before being
     // treated as graph nodes. This is the main lever for GPS noise: a consumer

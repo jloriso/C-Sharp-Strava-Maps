@@ -58,6 +58,9 @@ public static class Program
         var tracks = new List<ActivityTrack>();
         var matchedIds = new HashSet<string>();
         int unmatchedGpxCount = 0;
+        const int segmentLogInterval = 100;
+        int totalTrackedSegments = 0;
+        int nextSegmentLogThreshold = segmentLogInterval;
 
         foreach (var file in files.OrderBy(f => f))
         {
@@ -96,15 +99,26 @@ public static class Program
                     track.AllPoints.Add((pt.Lat, pt.Lon));
                 track.DistanceMeters = distanceMeters;
 
-                if (track.AllPoints.Count > 0) tracks.Add(track);
+                if (track.Segments.Count > 0)
+                {
+                    totalTrackedSegments += track.Segments.Count;
+                    while (totalTrackedSegments >= nextSegmentLogThreshold)
+                    {
+                        Console.WriteLine($"  Tracked {nextSegmentLogThreshold} total segment(s) so far...");
+                        nextSegmentLogThreshold += segmentLogInterval;
+                    }
+                }
 
-                Console.WriteLine($"  {name}: {track.Segments.Count} track segment(s), {parsed.Points.Count} waypoint(s) [{meta.Type}]");
+                if (track.AllPoints.Count > 0) tracks.Add(track);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"  Skipping {name}: {ex.Message}");
             }
         }
+
+        if (totalTrackedSegments > 0)
+            Console.WriteLine($"Tracked {totalTrackedSegments} total segment(s).");
 
         if (config.CsvFile != null)
             PrintMatchSummary(activitiesByFilenameId!, activitiesByActivityId!, matchedIds, unmatchedGpxCount);
@@ -139,7 +153,7 @@ public static class Program
             heat.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
 
         Console.WriteLine("Building line map (computing route frequency)...");
-        var lineData = LineMapHtmlMapBuilder.Build(tracks);
+        var lineData = LineMapDataBuilder.Build(tracks);
         var linemapHtml = LineMapHtmlBuilder.BuildHtml(
             lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
         
@@ -269,7 +283,7 @@ public static class Program
         int csvOnlyCount = totalCsvRows - matchedIds.Count;
 
         Console.WriteLine($"\n{matchedIds.Count} activity file(s) matched a CSV row.");
-        Console.WriteLine($"~{csvOnlyCount} CSV row(s) have no corresponding activity file (expected, per your note).");
+        Console.WriteLine($"~{csvOnlyCount} CSV row(s) have no corresponding activity file");
         if (unmatchedGpxCount > 0)
             Console.WriteLine($"{unmatchedGpxCount} activity file(s) had no matching CSV row (check the Filename/Activity ID columns for that activity).");
     }
