@@ -23,11 +23,13 @@
     <Compile Remove="bin\**" />
     <Compile Remove="FileReader\bin\**" />
     <Compile Remove="FileReader\obj\**" />
+    <Compile Remove="Web.Features\bin\**" />
+    <Compile Remove="Web.Features\obj\**" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="bin\**" />
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <Content Include="Features/*/*.html" CopyToOutputDirectory="PreserveNewest"/>
     <Content Update="Features\Heatmap\heatmap.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -38,9 +40,22 @@
     <Content Update="Features\WeeklyMileage\weeklymileage.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup> -->
+  <ItemGroup>
+    <Content Include="Web.Features/Controls/Templates/*.js" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>Controls/Templates/%(Filename)%(Extension)</TargetPath>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Controls/Templates/*.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Web.Features/Maps/Heatmap/heatmap.html" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>Features/Heatmap/heatmap.html</TargetPath>
+    </Content>
+    <Content Include="Web.Features/Maps/Linemap/linemap.html" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>Features/Linemap/linemap.html</TargetPath>
+    </Content>
+    <Content Include="Web.Features/Charts/WeeklyMileage/weeklymileage.html" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>Features/WeeklyMileage/weeklymileage.html</TargetPath>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Index/*.html" CopyToOutputDirectory="PreserveNewest" />

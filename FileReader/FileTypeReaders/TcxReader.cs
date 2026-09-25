@@ -2,43 +2,44 @@ using System.Globalization;
 using System.Xml.Linq;
 using GpxWorldMap.Models;
 
-namespace GpxWorldMap.FileInterpreter.FileTypeReaders;
-
-/// <summary>Parses TCX XML (already decompressed) into tracks. TCX structures GPS
-/// data as Activity/Lap/Track/Trackpoint/Position/LatitudeDegrees+LongitudeDegrees;
-/// each Track becomes one segment (similar to a GPX trkseg).</summary>
-public static class TcxReader
+namespace GpxWorldMap.FileInterpreter.FileTypeReaders
 {
-    public static ParsedGpx ParseTcx(string xml)
+    /// <summary>Parses TCX XML (already decompressed) into tracks. TCX structures GPS
+    /// data as Activity/Lap/Track/Trackpoint/Position/LatitudeDegrees+LongitudeDegrees;
+    /// each Track becomes one segment (similar to a GPX trkseg).</summary>
+    public static class TcxReader
     {
-        var doc = XDocument.Parse(xml);
-        var result = new ParsedGpx();
-
-        foreach (var track in doc.Descendants().Where(e => e.Name.LocalName == "Track"))
+        public static ParsedGpx ParseTcx(string xml)
         {
-            var pts = track.Elements().Where(e => e.Name.LocalName == "Trackpoint")
-                .Select(ReadTrackpoint)
-                .Where(p => p.HasValue)
-                .Select(p => p!.Value)
-                .ToList();
-            if (pts.Count > 0) result.Segments.Add(pts);
+            var doc = XDocument.Parse(xml);
+            var result = new ParsedGpx();
+
+            foreach (var track in doc.Descendants().Where(e => e.Name.LocalName == "Track"))
+            {
+                var pts = track.Elements().Where(e => e.Name.LocalName == "Trackpoint")
+                    .Select(ReadTrackpoint)
+                    .Where(p => p.HasValue)
+                    .Select(p => p!.Value)
+                    .ToList();
+                if (pts.Count > 0) result.Segments.Add(pts);
+            }
+
+            return result;
         }
 
-        return result;
-    }
+        private static (double Lat, double Lon)? ReadTrackpoint(XElement trackpoint)
+        {
+            var position = trackpoint.Elements().FirstOrDefault(e => e.Name.LocalName == "Position");
+            if (position == null) return null;
 
-    private static (double Lat, double Lon)? ReadTrackpoint(XElement trackpoint)
-    {
-        var position = trackpoint.Elements().FirstOrDefault(e => e.Name.LocalName == "Position");
-        if (position == null) return null;
+            var latEl = position.Elements().FirstOrDefault(e => e.Name.LocalName == "LatitudeDegrees");
+            var lonEl = position.Elements().FirstOrDefault(e => e.Name.LocalName == "LongitudeDegrees");
+            if (latEl == null || lonEl == null) return null;
 
-        var latEl = position.Elements().FirstOrDefault(e => e.Name.LocalName == "LatitudeDegrees");
-        var lonEl = position.Elements().FirstOrDefault(e => e.Name.LocalName == "LongitudeDegrees");
-        if (latEl == null || lonEl == null) return null;
-
-        if (double.TryParse(latEl.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat) &&
-            double.TryParse(lonEl.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lon))
-            return (lat, lon);
-        return null;
+            if (double.TryParse(latEl.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat) &&
+                double.TryParse(lonEl.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lon))
+                return (lat, lon);
+            return null;
+        }
     }
 }

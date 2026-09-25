@@ -5,3 +5,6 @@
 /.vs
 gpxworldmap.config.json
 map.html
+/Web.Features/obj
+/Web.Features/bin
+/Web.Features/wwwroot

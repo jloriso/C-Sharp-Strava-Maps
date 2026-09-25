@@ -1,13 +1,14 @@
-namespace GpxWorldMap.Config;
-
-/// <summary>Shape of the optional JSON config file. All fields are optional --
-/// anything left out just falls back to the command line or the defaults.</summary>
-public class ConfigFile
+namespace GpxWorldMap.Config
 {
-    public string? GpxFolder { get; set; }
-    public string? CsvFile { get; set; }
-    public string? OutputHeatmapHtml { get; set; }
-    public string? OutputLineMapHtml { get; set; }
-    public string? OutputWeeklyMileageHtml { get; set; }
-    public string? CartoApiKey { get; set; }
+    /// <summary>Shape of the optional JSON config file. All fields are optional --
+    /// anything left out just falls back to the command line or the defaults.</summary>
+    public class ConfigFile
+    {
+        public string? GpxFolder { get; set; }
+        public string? CsvFile { get; set; }
+        public string? OutputHeatmapHtml { get; set; }
+        public string? OutputLineMapHtml { get; set; }
+        public string? OutputWeeklyMileageHtml { get; set; }
+        public string? CartoApiKey { get; set; }
+    }
 }
