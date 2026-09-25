@@ -21,6 +21,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="bin\**" />
+    <Compile Remove="FileReader\bin\**" />
+    <Compile Remove="FileReader\obj\**" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="bin\**" />

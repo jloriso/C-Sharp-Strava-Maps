@@ -2,7 +2,7 @@ using System.Text;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
-namespace GpxWorldMap.Input;
+namespace GpxWorldMap.FileInterpreter.FileTypeReaders;
 
 /// <summary>Reads the activities CSV export and extracts just the columns this
 /// project needs, ignoring however many other columns the export has.</summary>

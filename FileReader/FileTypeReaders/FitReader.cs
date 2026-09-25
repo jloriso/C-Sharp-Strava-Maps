@@ -1,6 +1,6 @@
 using GpxWorldMap.Models;
 
-namespace GpxWorldMap.Input;
+namespace GpxWorldMap.FileInterpreter.FileTypeReaders;
 
 /// <summary>
 /// A minimal parser for Garmin's FIT binary format, just enough to pull GPS

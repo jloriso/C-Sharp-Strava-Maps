@@ -4,7 +4,7 @@ using GpxWorldMap.Config;
 using GpxWorldMap.Features.Heatmap;
 using GpxWorldMap.Features.Linemap;
 using GpxWorldMap.Features.WeeklyMileage;
-using GpxWorldMap.Input;
+using GpxWorldMap.FileInterpreter.FileTypeReaders;
 using GpxWorldMap.Models;
 using GpxWorldMap.Rendering;
 using GpxWorldMap.Server;
