@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Maps</title>
+    <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; flex-direction: column; font: 14px sans-serif; }
+        .app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; flex: 0 0 auto; }
+        .app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
+        .app-nav .nav-link:hover { background: #333; color: #fff; }
+        .app-nav .nav-link.active { background: #3388ff; color: #fff; }
+        #map-stage { position: relative; min-height: 0; flex: 1 1 auto; }
+        #map-frame { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border: 0; }
+    </style>
+</head>
+<body>
+{{NAV_BAR_HTML}}
+<div id="map-stage">
+    <iframe id="map-frame" title="Heatmap" data-heatmap="{{HEATMAP_HREF}}" data-linemap="{{LINEMAP_HREF}}"></iframe>
+</div>
+<script>
+    var mapFrame = document.getElementById('map-frame');
+    var mapUrls = {
+        heatmap: mapFrame.getAttribute('data-heatmap'),
+        linemap: mapFrame.getAttribute('data-linemap')
+    };
+    window.addEventListener('message', function (event) {
+        if (event.source !== mapFrame.contentWindow || event.origin !== window.location.origin) return;
+        if (!event.data || event.data.type !== 'gpxworldmap-switch-map') return;
+        var target = event.data.map;
+        if (!Object.prototype.hasOwnProperty.call(mapUrls, target)) return;
+        mapFrame.title = target === 'heatmap' ? 'Heatmap' : 'Line Map';
+        mapFrame.src = mapUrls[target];
+    });
+    mapFrame.src = mapUrls.heatmap;
+</script>
+</body>
+</html>

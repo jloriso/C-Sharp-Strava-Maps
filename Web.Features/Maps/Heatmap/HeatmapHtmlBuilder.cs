@@ -19,14 +19,17 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
             string heatmapHref,
             string lineMapHref,
             string weeklyMileageHref,
+            string mapsHref,
             string? cartoApiKey)
         {
             string bookmarkScript = BookmarkControlScript.Build(locations);
             string typeControlScript = ActivityTypeControlScript.Build(types);
             string homeControlScript = HomeControlScript.Build("/");
+            string mapTypeControlScript = MapTypeControlScript.Build("heatmap");
+            string timelineControlScript = TimelineControlScript.Build();
             var initial = locations.FirstOrDefault() ?? new MapLocation { Lat = 20.0, Lon = 0.0, Zoom = 3 };
             string initialViewJs = $"[{(initial.Lat)}, {(initial.Lon)}], {initial.Zoom}";
-            string navBarHtml = NavBarBuilder.BuildHtml("heatmap", weeklyMileageHref, heatmapHref, lineMapHref);
+            string navBarHtml = NavBarBuilder.BuildHtml("heatmap", weeklyMileageHref, heatmapHref, lineMapHref, mapsHref);
             string cartoApiQuery = string.IsNullOrWhiteSpace(cartoApiKey)
                 ? ""
                 : "?key=" + Uri.EscapeDataString(cartoApiKey);
@@ -37,6 +40,8 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
                 .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
                 .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)
                 .Replace("{{HOME_CONTROL_SCRIPT}}", homeControlScript)
+                .Replace("{{MAP_TYPE_CONTROL_SCRIPT}}", mapTypeControlScript)
+                .Replace("{{TIMELINE_CONTROL_SCRIPT}}", timelineControlScript)
                 .Replace("{{INITIAL_VIEW_JS}}", initialViewJs)
                 .Replace("{{NAV_BAR_HTML}}", navBarHtml)
                 .Replace("{{CARTO_API_QUERY}}", cartoApiQuery);

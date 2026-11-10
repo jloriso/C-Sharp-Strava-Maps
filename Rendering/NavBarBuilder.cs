@@ -3,8 +3,7 @@
 namespace GpxWorldMap.Rendering
 {
     /// <summary>
-    /// Builds the small top nav bar shared by all three generated pages (Weekly
-    /// Mileage / Heatmap / Line Map), so each page can link to the other two.
+    /// Builds the small top nav bar shared by all generated pages.
     ///
     /// Hrefs are passed in rather than hardcoded, since your configured output
     /// filenames (AppConfig.OutputHeatmapHtml, OutputLineMapHtml,
@@ -17,10 +16,11 @@ namespace GpxWorldMap.Rendering
     /// </summary>
     public static class NavBarBuilder
     {
-        public static string BuildHtml(string activePage, string weeklyMileageHref, string heatmapHref, string lineMapHref)
+        public static string BuildHtml(string activePage, string weeklyMileageHref, string heatmapHref, string lineMapHref, string mapsHref)
         {
             var sb = new StringBuilder("<nav class=\"app-nav\">");
             AppendLink(sb, "Weekly Mileage", weeklyMileageHref, activePage == "weeklymileage");
+            AppendLink(sb, "Maps", mapsHref, activePage == "maps");
             AppendLink(sb, "Heatmap", heatmapHref, activePage == "heatmap");
             AppendLink(sb, "Line Map", lineMapHref, activePage == "linemap");
             sb.Append("</nav>");

@@ -53,6 +53,9 @@
     <Content Include="Web.Features/Maps/Linemap/linemap.html" CopyToOutputDirectory="PreserveNewest">
       <TargetPath>Features/Linemap/linemap.html</TargetPath>
     </Content>
+    <Content Include="Web.Features/Maps/MapSwitcher/maps.html" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>Features/MapSwitcher/maps.html</TargetPath>
+    </Content>
     <Content Include="Web.Features/Charts/WeeklyMileage/weeklymileage.html" CopyToOutputDirectory="PreserveNewest">
       <TargetPath>Features/WeeklyMileage/weeklymileage.html</TargetPath>
     </Content>

@@ -9,6 +9,7 @@ using GpxWorldMap.Shared;
 using GpxWorldMap.Web.Features.Charts.WeeklyMileage;
 using GpxWorldMap.Web.Features.Maps.Heatmap;
 using GpxWorldMap.Web.Features.Maps.Linemap;
+using GpxWorldMap.Web.Features.Maps.MapSwitcher;
 
 namespace GpxWorldMap
 {
@@ -145,19 +146,20 @@ namespace GpxWorldMap
             // matter what you rename OutputHeatmapHtml/OutputLineMapHtml to.
             string heatmapHref = Path.GetFileName(config.OutputHeatmapHtml);
             string lineMapHref = Path.GetFileName(config.OutputLineMapHtml);
+            const string mapsHref = "maps.html";
             const string weeklyMileageHref = "/";
 
             Console.WriteLine("\nBuilding heatmap...");
             var heat = HeatmapDataBuilder.Build(tracks);
             string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(
                 heat.UndatedByTypeJs, heat.TimelineActivitiesJs, categoryColors, locations,
-                heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
+                heatmapHref, lineMapHref, weeklyMileageHref, mapsHref, config.CartoApiKey);
 
             Console.WriteLine("Building line map (computing route frequency)...");
             var lineData = LineMapDataBuilder.Build(tracks);
             var linemapHtml = LineMapHtmlBuilder.BuildHtml(
                 lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs,
-                categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
+                categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, mapsHref, config.CartoApiKey);
         
             Console.WriteLine("Building weekly mileage chart...");
             var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
@@ -165,7 +167,10 @@ namespace GpxWorldMap
                 Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
                                   "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
             var weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
-                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors, heatmapHref, lineMapHref, weeklyMileageHref);
+                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors,
+                heatmapHref, lineMapHref, weeklyMileageHref, mapsHref);
+            string mapsHtml = MapSwitcherHtmlBuilder.BuildHtml(
+                weeklyMileageHref, heatmapHref, lineMapHref, mapsHref);
 
             WriteFile(config.OutputHeatmapHtml, heatmapHtml);
             WriteFile(config.OutputLineMapHtml, linemapHtml);
@@ -177,6 +182,7 @@ namespace GpxWorldMap
             {
                 [heatmapHref] = heatmapHtml,
                 [lineMapHref] = linemapHtml,
+                [mapsHref] = mapsHtml,
             });
             return 0;
         }

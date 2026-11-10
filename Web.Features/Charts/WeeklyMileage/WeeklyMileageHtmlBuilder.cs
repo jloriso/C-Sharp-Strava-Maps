@@ -22,30 +22,17 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             List<(string Type, string Color)> categories,
             string heatmapHref,
             string lineMapHref,
-            string weeklyMileageHref)
+            string weeklyMileageHref,
+            string mapsHref)
         {
             string typeColorsJs = BuildTypeColorsJs(categories);
-            string checkboxesHtml = BuildCheckboxesHtml(categories);
-            string navBarHtml = NavBarBuilder.BuildHtml("weeklymileage", weeklyMileageHref, heatmapHref, lineMapHref);
+            string navBarHtml = NavBarBuilder.BuildHtml("weeklymileage", weeklyMileageHref, heatmapHref, lineMapHref, mapsHref);
 
             return HtmlTemplateLoader.Load("Features/WeeklyMileage", "weeklymileage.html")
                 .Replace("{{WEEKS_JS}}", weeksJs)
                 .Replace("{{SERIES_BY_TYPE_JS}}", seriesByTypeJs)
                 .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)
-                .Replace("{{ACTIVITY_TYPE_CHECKBOXES_HTML}}", checkboxesHtml)
                 .Replace("{{NAV_BAR_HTML}}", navBarHtml);
-        }
-
-        private static string BuildCheckboxesHtml(List<(string Type, string Color)> categories)
-        {
-            var sb = new StringBuilder();
-            foreach (var (type, color) in categories)
-            {
-                sb.Append("<label><input type=\"checkbox\" class=\"activity-type-toggle\" data-type=\"")
-                    .Append(Esc(type)).Append("\" checked><span class=\"swatch\" style=\"background:")
-                    .Append(color).Append(";\"></span>").Append(Esc(type)).Append("</label>\n");
-            }
-            return sb.ToString();
         }
 
         private static string BuildTypeColorsJs(List<(string Type, string Color)> categories)
@@ -61,7 +48,5 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             sb.Append("}");
             return sb.ToString();
         }
-
-        private static string Esc(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
     }
 }

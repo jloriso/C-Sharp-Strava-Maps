@@ -8,21 +8,31 @@
         html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
         #map { flex: 1 1 auto; }
         #timeline-controls {
-            display: grid; grid-template-columns: auto minmax(100px, 1fr) auto auto; align-items: center;
-            gap: 12px; padding: 10px 16px; background: #fff; border-top: 1px solid #d5d9dc;
+            display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; background: #fff; border-top: 1px solid #d5d9dc;
             color: #24292d; font: 13px sans-serif; flex: 0 0 auto;
         }
         #timeline-controls[hidden] { display: none; }
+        .timeline-navigation, .timeline-playback { display: flex; align-items: center; gap: 6px; }
+        .timeline-navigation { justify-content: center; }
+        .timeline-playback { width: 100%; }
         .timeline-button {
-            min-width: 64px; height: 34px; padding: 0 10px; border: 1px solid #aeb6bc;
+            min-width: 64px; height: 30px; padding: 0 10px; border: 1px solid #aeb6bc;
             border-radius: 4px; background: #f7f8f8; color: inherit; font: inherit; cursor: pointer;
         }
         .timeline-button:hover { background: #edf0f1; }
-        #timeline-slider { width: 100%; min-width: 0; accent-color: #16836d; }
+        .timeline-button:disabled { opacity: 0.4; cursor: default; }
+        #timeline-slider { flex: 1 1 auto; min-width: 0; accent-color: #16836d; }
         #timeline-date { min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+        .map-type-buttons { display: flex; gap: 4px; }
+        .map-type-btn { height: 30px; padding: 0 9px; border: 1px solid #ccc; border-radius: 3px; background: #f7f7f7; color: #24292d; font: 13px sans-serif; cursor: pointer; white-space: nowrap; }
+        .map-type-btn.active { background: #3388ff; border-color: #3388ff; color: #fff; }
+        .map-type-btn:hover:not(.active) { background: #ececec; }
+        .leaflet-top.leaflet-left .map-type-control { clear: none; margin-top: 10px; margin-left: 4px; }
         @media (max-width: 480px) {
-            #timeline-controls { grid-template-columns: auto minmax(72px, 1fr) auto; gap: 8px; padding: 8px; }
-            #timeline-date { grid-column: 1 / -1; grid-row: 2; text-align: center; }
+            .timeline-navigation { justify-content: space-between; }
+            .timeline-navigation .timeline-button { min-width: 0; padding: 0 7px; }
+            .timeline-playback { gap: 5px; }
+            #timeline-date { min-width: 72px; }
         }
         .app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; flex: 0 0 auto; }
         .app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
@@ -55,16 +65,26 @@
 {{NAV_BAR_HTML}}
 <div id="map"></div>
 <div id="timeline-controls" hidden>
-    <button id="timeline-play" class="timeline-button" type="button" aria-label="Play timeline">Play</button>
-    <input id="timeline-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Activities shown over time" />
-    <button id="timeline-speed" class="timeline-button" type="button" aria-label="Timeline duration">30s</button>
-    <output id="timeline-date" for="timeline-slider"></output>
+    <div class="timeline-navigation">
+        <button id="timeline-start" class="timeline-button" type="button">Start</button>
+        <button id="timeline-older" class="timeline-button" type="button">Older</button>
+        <button id="timeline-newer" class="timeline-button" type="button">Newer</button>
+        <button id="timeline-latest" class="timeline-button" type="button">Latest</button>
+    </div>
+    <div class="timeline-playback">
+        <button id="timeline-play" class="timeline-button" type="button" aria-label="Play timeline">Play</button>
+        <input type="range" id="timeline-slider" min="0" max="0" value="0" step="1" aria-label="Activities shown over time" />
+        <button id="timeline-speed" class="timeline-button" type="button" aria-label="Timeline duration">30s</button>
+        <output id="timeline-date" for="timeline-slider"></output>
+        <output id="timeline-year" for="timeline-slider"></output>
+    </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
     var undatedPointsByType = {{UNDATED_POINTS_BY_TYPE_JS}};
     var timelineActivities = {{TIMELINE_ACTIVITIES_JS}};
+    if (window.self !== window.top) document.querySelector('.app-nav').hidden = true;
 
     var map = L.map('map', { zoomControl: false }).setView({{INITIAL_VIEW_JS}});
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -86,17 +106,7 @@
         heatLayersByType[type] = L.heatLayer([], heatOptions).addTo(map);
     });
 
-    var timelineSlider = document.getElementById('timeline-slider');
-    var timelineDate = document.getElementById('timeline-date');
-    var playButton = document.getElementById('timeline-play');
-    var speedButton = document.getElementById('timeline-speed');
-    var timelineTimer = null;
-    var speedOptions = [30000, 15000, 7500];
-    var speedLabels = ['30s', '15s', '7.5s'];
-    var speedIndex = 0;
-
-    function renderTimeline() {
-        var activityCount = Number(timelineSlider.value);
+    function renderTimeline(activityCount) {
         var pointsByType = {};
         Object.keys(undatedPointsByType).forEach(function (type) {
             pointsByType[type] = undatedPointsByType[type].slice();
@@ -109,52 +119,6 @@
         Object.keys(heatLayersByType).forEach(function (type) {
             heatLayersByType[type].setLatLngs(pointsByType[type] || []);
         });
-        timelineDate.textContent = activityCount === 0
-            ? 'Before first activity'
-            : timelineActivities[activityCount - 1].date + ' · ' + activityCount + ' / ' + timelineActivities.length;
-    }
-
-    function stopPlayback() {
-        if (timelineTimer !== null) window.clearInterval(timelineTimer);
-        timelineTimer = null;
-        playButton.textContent = 'Play';
-        playButton.setAttribute('aria-label', 'Play timeline');
-    }
-
-    function startPlayback() {
-        if (Number(timelineSlider.value) >= timelineActivities.length) {
-            timelineSlider.value = '0';
-            renderTimeline();
-        }
-        playButton.textContent = 'Pause';
-        playButton.setAttribute('aria-label', 'Pause timeline');
-        timelineTimer = window.setInterval(function () {
-            var next = Number(timelineSlider.value) + 1;
-            timelineSlider.value = String(next);
-            renderTimeline();
-            if (next >= timelineActivities.length) stopPlayback();
-        }, Math.max(1, speedOptions[speedIndex] / timelineActivities.length));
-    }
-
-    timelineSlider.max = String(timelineActivities.length);
-    if (timelineActivities.length > 0) {
-        document.getElementById('timeline-controls').hidden = false;
-        renderTimeline();
-        timelineSlider.addEventListener('input', renderTimeline);
-        playButton.addEventListener('click', function () {
-            if (timelineTimer === null) startPlayback(); else stopPlayback();
-        });
-        speedButton.addEventListener('click', function () {
-            speedIndex = (speedIndex + 1) % speedOptions.length;
-            speedButton.textContent = speedLabels[speedIndex];
-            speedButton.setAttribute('aria-label', 'Timeline duration ' + speedLabels[speedIndex]);
-            if (timelineTimer !== null) {
-                stopPlayback();
-                startPlayback();
-            }
-        });
-    } else {
-        renderTimeline();
     }
 
     window.onActivityTypeToggle = function (type, checked) {
@@ -166,6 +130,9 @@
     {{BOOKMARK_CONTROL_SCRIPT}}
     {{ACTIVITY_TYPE_CONTROL_SCRIPT}}
     {{HOME_CONTROL_SCRIPT}}
+    window.onTimelineChange = renderTimeline;
+    {{MAP_TYPE_CONTROL_SCRIPT}}
+    {{TIMELINE_CONTROL_SCRIPT}}
 </script>
 </body>
 </html>
