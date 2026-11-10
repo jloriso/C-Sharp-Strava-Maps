@@ -1,0 +1,5 @@
+/home/jloriso/Programs/C-Sharp-Strava-Maps/FileReader/obj/Debug/net8.0/FileReader.GeneratedMSBuildEditorConfig.editorconfig
+/home/jloriso/Programs/C-Sharp-Strava-Maps/FileReader/obj/Debug/net8.0/FileReader.AssemblyInfoInputs.cache
+/home/jloriso/Programs/C-Sharp-Strava-Maps/FileReader/obj/Debug/net8.0/FileReader.AssemblyInfo.cs
+/home/jloriso/Programs/C-Sharp-Strava-Maps/FileReader/obj/Debug/net8.0/FileReader.csproj.CoreCompileInputs.cache
+/home/jloriso/Programs/C-Sharp-Strava-Maps/FileReader/obj/Debug/net8.0/FileReader.sourcelink.json

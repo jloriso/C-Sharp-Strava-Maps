@@ -1,22 +1,33 @@
 using System.Globalization;
-using System.Text;
+using System.Text.Json;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
 namespace GpxWorldMap.Web.Features.Maps.Heatmap
 {
     /// <summary>
-    /// Aggregates raw track points into weighted heatmap points, one bucket per
-    /// category (Run/Bike/Other). Points are rounded to a fixed precision and counted;
-    /// then each category's counts are transformed into normalized heat weights using
-    /// percentile clipping + log scaling for better visual contrast.
+    /// Builds chronological, per-activity heatmap batches while preserving the full-map
+    /// point weights when all dated activities have been revealed.
     /// </summary>
     public static class HeatmapDataBuilder
     {
         public class Result
         {
-            /// <summary>JS object literal: {"Run": [[lat,lon,weight], ...], "Ride": [...]}.</summary>
-            public string ByTypeJs = "{}";
+            public string UndatedByTypeJs = "{}";
+            public string TimelineActivitiesJs = "[]";
+        }
+
+        private sealed class ActivityBucket
+        {
+            public string Type { get; init; } = "";
+            public DateTime? Date { get; init; }
+            public Dictionary<(double Lat, double Lon), int> Counts { get; init; } = new();
+        }
+
+        private sealed class TypeScale
+        {
+            public double ClampMax { get; init; }
+            public double Denominator { get; init; }
         }
 
         /// <param name="precision">
@@ -31,84 +42,103 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
             int precision = 6,
             double clampPercentile = 95.0)
         {
-            var byType = new Dictionary<string, Dictionary<(double Lat, double Lon), int>>();
+            var activities = new List<ActivityBucket>();
+            var totalsByType = new Dictionary<string, Dictionary<(double Lat, double Lon), int>>();
 
             foreach (var track in tracks)
             {
-                // Collapse raw activity types into fixed map categories.
                 var category = ActivityCategory.CategoryForType(track.Type);
-                if (!byType.TryGetValue(category, out var counts))
+                if (!totalsByType.TryGetValue(category, out var totals))
                 {
-                    counts = new Dictionary<(double, double), int>();
-                    byType[category] = counts;
+                    totals = new Dictionary<(double, double), int>();
+                    totalsByType[category] = totals;
                 }
 
+                var activityCounts = new Dictionary<(double Lat, double Lon), int>();
                 foreach (var (lat, lon) in track.AllPoints)
                 {
                     var key = (Math.Round(lat, precision), Math.Round(lon, precision));
-                    counts[key] = counts.TryGetValue(key, out var c) ? c + 1 : 1;
+                    activityCounts[key] = activityCounts.TryGetValue(key, out var activityCount) ? activityCount + 1 : 1;
+                    totals[key] = totals.TryGetValue(key, out var totalCount) ? totalCount + 1 : 1;
                 }
+
+                activities.Add(new ActivityBucket
+                {
+                    Type = category,
+                    Date = track.ActivityDate?.Date,
+                    Counts = activityCounts
+                });
             }
 
-            return new Result { ByTypeJs = ToByTypeJs(byType, clampPercentile) };
-        }
+            var scales = totalsByType.ToDictionary(
+                pair => pair.Key,
+                pair => CreateScale(pair.Value, clampPercentile));
 
-        private static string ToByTypeJs(
-            Dictionary<string, Dictionary<(double Lat, double Lon), int>> byType,
-            double clampPercentile)
-        {
-            var sb = new StringBuilder("{");
-            bool firstType = true;
+            var datedActivities = activities
+                .Where(activity => activity.Date.HasValue)
+                .OrderBy(activity => activity.Date)
+                .ToList();
+            var baselineActivities = activities.Where(activity => !activity.Date.HasValue).ToList();
 
-            foreach (var kv in byType)
+            // If no dates are available, keep all activities visible as a static map.
+            if (datedActivities.Count == 0)
+                baselineActivities = activities;
+
+            var undatedPoints = new Dictionary<string, List<double[]>>();
+            foreach (var activity in baselineActivities)
+                AddPoints(undatedPoints, activity.Type, ToPoints(activity, totalsByType, scales));
+
+            var timeline = datedActivities.Select(activity => new
             {
-                if (!firstType) sb.Append(",");
-                firstType = false;
+                date = activity.Date!.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                type = activity.Type,
+                points = ToPoints(activity, totalsByType, scales)
+            });
 
-                sb.Append(JsonStr(kv.Key))
-                    .Append(":")
-                    .Append(ToPointArrayJs(kv.Value, clampPercentile));
-            }
-
-            sb.Append("}");
-            return sb.ToString();
+            return new Result
+            {
+                UndatedByTypeJs = JsonSerializer.Serialize(undatedPoints),
+                TimelineActivitiesJs = JsonSerializer.Serialize(timeline)
+            };
         }
 
-        private static string ToPointArrayJs(
+        private static TypeScale CreateScale(
             Dictionary<(double Lat, double Lon), int> counts,
             double clampPercentile)
         {
-            if (counts.Count == 0) return "[]";
+            double clampMax = Math.Max(1.0, Percentile(counts.Values, clampPercentile));
+            double denominator = Math.Log(1.0 + clampMax);
+            return new TypeScale { ClampMax = clampMax, Denominator = denominator > 0.0 ? denominator : 1.0 };
+        }
 
-            double clampMax = Percentile(counts.Values, clampPercentile);
-            if (clampMax < 1.0) clampMax = 1.0;
-
-            double denom = Math.Log(1.0 + clampMax);
-            if (denom <= 0.0) denom = 1.0;
-
-            var sb = new StringBuilder("[");
-            bool first = true;
-
-            foreach (var kv in counts)
+        private static List<double[]> ToPoints(
+            ActivityBucket activity,
+            Dictionary<string, Dictionary<(double Lat, double Lon), int>> totalsByType,
+            Dictionary<string, TypeScale> scales)
+        {
+            var points = new List<double[]>(activity.Counts.Count);
+            var totals = totalsByType[activity.Type];
+            var scale = scales[activity.Type];
+            foreach (var point in activity.Counts)
             {
-                if (!first) sb.Append(",");
-                first = false;
-
-                double clipped = Math.Min(kv.Value, clampMax);
-                double weight = Math.Log(1.0 + clipped) / denom;
-
-                // Keep tiny values visible and avoid exact zero.
+                double weight = Math.Log(1.0 + Math.Min(totals[point.Key], scale.ClampMax)) / scale.Denominator;
                 if (weight < 0.05) weight = 0.05;
-
-                sb.Append('[')
-                    .Append(Fmt(kv.Key.Lat)).Append(',')
-                    .Append(Fmt(kv.Key.Lon)).Append(',')
-                    .Append(Fmt(weight))
-                    .Append(']');
+                weight *= (double)point.Value / totals[point.Key];
+                points.Add(new[] { point.Key.Lat, point.Key.Lon, weight });
             }
 
-            sb.Append("]");
-            return sb.ToString();
+            return points;
+        }
+
+        private static void AddPoints(Dictionary<string, List<double[]>> byType, string type, List<double[]> points)
+        {
+            if (!byType.TryGetValue(type, out var allPoints))
+            {
+                allPoints = new List<double[]>();
+                byType[type] = allPoints;
+            }
+
+            allPoints.AddRange(points);
         }
 
         private static double Percentile(IEnumerable<int> values, double percentile)
@@ -129,8 +159,5 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
             double t = rank - lo;
             return arr[lo] + (arr[hi] - arr[lo]) * t;
         }
-
-        private static string Fmt(double d) => d.ToString("F6", CultureInfo.InvariantCulture);
-        private static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
     }
 }

@@ -150,7 +150,8 @@ namespace GpxWorldMap
             Console.WriteLine("\nBuilding heatmap...");
             var heat = HeatmapDataBuilder.Build(tracks);
             string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(
-                heat.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
+                heat.UndatedByTypeJs, heat.TimelineActivitiesJs, categoryColors, locations,
+                heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
 
             Console.WriteLine("Building line map (computing route frequency)...");
             var lineData = LineMapDataBuilder.Build(tracks);

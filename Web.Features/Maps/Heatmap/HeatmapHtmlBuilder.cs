@@ -12,7 +12,8 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
     public static class HeatmapHtmlBuilder
     {
         public static string BuildHtml(
-            string pointsByTypeJs,
+            string undatedPointsByTypeJs,
+            string timelineActivitiesJs,
             List<(string Type, string Color)> types,
             List<MapLocation> locations,
             string heatmapHref,
@@ -31,7 +32,8 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
                 : "?key=" + Uri.EscapeDataString(cartoApiKey);
 
             return HtmlTemplateLoader.Load("Features/Heatmap","heatmap.html")
-                .Replace("{{POINTS_BY_TYPE_JS}}", pointsByTypeJs)
+                .Replace("{{UNDATED_POINTS_BY_TYPE_JS}}", undatedPointsByTypeJs)
+                .Replace("{{TIMELINE_ACTIVITIES_JS}}", timelineActivitiesJs)
                 .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
                 .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)
                 .Replace("{{HOME_CONTROL_SCRIPT}}", homeControlScript)
