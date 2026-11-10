@@ -65,7 +65,7 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
                 activities.Add(new ActivityBucket
                 {
                     Type = category,
-                    Date = track.ActivityDate?.Date,
+                    Date = track.ActivityDate,
                     Counts = activityCounts
                 });
             }

@@ -14,6 +14,8 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
     {
         public static string BuildHtml(
             string lineDataByTypeJs,
+            string undatedActivitiesJs,
+            string timelineActivitiesJs,
             List<(string Type, string Color)> types,
             List<MapLocation> locations,
             string heatmapHref,
@@ -34,6 +36,8 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
 
             return HtmlTemplateLoader.Load("Features/Linemap","linemap.html")
                 .Replace("{{LINE_DATA_BY_TYPE_JS}}", lineDataByTypeJs)
+                .Replace("{{UNDATED_ACTIVITIES_JS}}", undatedActivitiesJs)
+                .Replace("{{TIMELINE_ACTIVITIES_JS}}", timelineActivitiesJs)
                 .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)
                 .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)
                 .Replace("{{ACTIVITY_TYPE_CONTROL_SCRIPT}}", typeControlScript)

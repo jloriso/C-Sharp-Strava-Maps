@@ -156,7 +156,8 @@ namespace GpxWorldMap
             Console.WriteLine("Building line map (computing route frequency)...");
             var lineData = LineMapDataBuilder.Build(tracks);
             var linemapHtml = LineMapHtmlBuilder.BuildHtml(
-                lineData.ByTypeJs, categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
+                lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs,
+                categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, config.CartoApiKey);
         
             Console.WriteLine("Building weekly mileage chart...");
             var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);

@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
@@ -77,20 +79,100 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
         {
             /// <summary>JS object literal: {"Run": {FeatureCollection...}, "Ride": {...}}.</summary>
             public string ByTypeJs = "{}";
+            public string UndatedActivitiesJs = "[]";
+            public string TimelineActivitiesJs = "[]";
         }
+
+        private sealed class TimelineActivity
+        {
+            public string? Date { get; init; }
+            [JsonIgnore]
+            public DateTime? SortDate { get; init; }
+            public string Type { get; init; } = "";
+            public double[] Bounds { get; init; } = Array.Empty<double>();
+            public List<List<double[]>> Segments { get; init; } = new();
+        }
+
+        private static readonly JsonSerializerOptions TimelineJsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public static Result Build(IEnumerable<ActivityTrack> tracks)
         {
-            var sb = new StringBuilder("{");
-            bool firstType = true;
-            foreach (var group in tracks.GroupBy(t => ActivityCategory.CategoryForType(t.Type)))
+            var trackList = tracks.ToList();
+            var activities = trackList
+                .Select(CreateTimelineActivity)
+                .Where(activity => activity != null)
+                .Select(activity => activity!)
+                .ToList();
+            var undatedActivities = activities.Where(activity => activity.Date == null).ToList();
+            var timelineActivities = activities
+                .Where(activity => activity.Date != null)
+                .OrderBy(activity => activity.SortDate)
+                .ToList();
+
+            if (timelineActivities.Count == 0)
+                undatedActivities = new List<TimelineActivity>();
+
+            string byTypeJs = "{}";
+            if (timelineActivities.Count == 0)
             {
-                if (!firstType) sb.Append(",");
-                firstType = false;
-                sb.Append(JsonStr(group.Key)).Append(":").Append(BuildTypeFeatureCollection(group.ToList()));
+                var sb = new StringBuilder("{");
+                bool firstType = true;
+                foreach (var group in trackList.GroupBy(t => ActivityCategory.CategoryForType(t.Type)))
+                {
+                    if (!firstType) sb.Append(",");
+                    firstType = false;
+                    sb.Append(JsonStr(group.Key)).Append(":").Append(BuildTypeFeatureCollection(group.ToList()));
+                }
+                sb.Append("}");
+                byTypeJs = sb.ToString();
             }
-            sb.Append("}");
-            return new Result { ByTypeJs = sb.ToString() };
+
+            return new Result
+            {
+                ByTypeJs = byTypeJs,
+                UndatedActivitiesJs = JsonSerializer.Serialize(undatedActivities, TimelineJsonOptions),
+                TimelineActivitiesJs = JsonSerializer.Serialize(timelineActivities, TimelineJsonOptions)
+            };
+        }
+
+        private static TimelineActivity? CreateTimelineActivity(ActivityTrack track)
+        {
+            if (track.AllPoints.Count == 0) return null;
+
+            double refLat = track.AllPoints.Average(point => point.Lat);
+            var (latStep, lonStep) = GridSteps(refLat);
+            var centroidSums = new Dictionary<Node, (double SumLat, double SumLon, int Count)>();
+            var segments = new List<List<double[]>>();
+            foreach (var segment in track.Segments)
+            {
+                var cells = SnapAndCollapse(segment, latStep, lonStep, centroidSums);
+                if (cells.Count < 2) continue;
+
+                segments.Add(cells.Select(cell =>
+                {
+                    var centroid = centroidSums[cell];
+                    return new[] { centroid.SumLat / centroid.Count, centroid.SumLon / centroid.Count };
+                }).ToList());
+            }
+            if (segments.Count == 0) return null;
+
+            return new TimelineActivity
+            {
+                Date = track.ActivityDate?.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                SortDate = track.ActivityDate,
+                Type = ActivityCategory.CategoryForType(track.Type),
+                Bounds = new[]
+                {
+                    track.AllPoints.Min(point => point.Lat),
+                    track.AllPoints.Min(point => point.Lon),
+                    track.AllPoints.Max(point => point.Lat),
+                    track.AllPoints.Max(point => point.Lon)
+                },
+                Segments = segments
+            };
         }
 
         private static string BuildTypeFeatureCollection(List<ActivityTrack> tracksOfType)

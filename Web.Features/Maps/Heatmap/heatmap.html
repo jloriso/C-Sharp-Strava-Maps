@@ -57,7 +57,7 @@
 <div id="timeline-controls" hidden>
     <button id="timeline-play" class="timeline-button" type="button" aria-label="Play timeline">Play</button>
     <input id="timeline-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Activities shown over time" />
-    <button id="timeline-speed" class="timeline-button" type="button" aria-label="Playback speed">1x</button>
+    <button id="timeline-speed" class="timeline-button" type="button" aria-label="Timeline duration">30s</button>
     <output id="timeline-date" for="timeline-slider"></output>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -91,8 +91,8 @@
     var playButton = document.getElementById('timeline-play');
     var speedButton = document.getElementById('timeline-speed');
     var timelineTimer = null;
-    var speedOptions = [1000, 500, 250];
-    var speedLabels = ['1x', '2x', '4x'];
+    var speedOptions = [30000, 15000, 7500];
+    var speedLabels = ['30s', '15s', '7.5s'];
     var speedIndex = 0;
 
     function renderTimeline() {
@@ -133,7 +133,7 @@
             timelineSlider.value = String(next);
             renderTimeline();
             if (next >= timelineActivities.length) stopPlayback();
-        }, speedOptions[speedIndex]);
+        }, Math.max(1, speedOptions[speedIndex] / timelineActivities.length));
     }
 
     timelineSlider.max = String(timelineActivities.length);
@@ -147,7 +147,7 @@
         speedButton.addEventListener('click', function () {
             speedIndex = (speedIndex + 1) % speedOptions.length;
             speedButton.textContent = speedLabels[speedIndex];
-            speedButton.setAttribute('aria-label', 'Playback speed ' + speedLabels[speedIndex]);
+            speedButton.setAttribute('aria-label', 'Timeline duration ' + speedLabels[speedIndex]);
             if (timelineTimer !== null) {
                 stopPlayback();
                 startPlayback();
