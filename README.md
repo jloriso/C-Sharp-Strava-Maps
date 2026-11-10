@@ -1,136 +1,127 @@
 ## GpxWorldMap
 
-Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
-pulls out the tracks/routes/waypoints, optionally joins each one against a
-Strava-style activities CSV, and produces **two** standalone interactive map pages
-(Leaflet.js, OpenStreetMap/CARTO tiles):
+GpxWorldMap reads `.gpx.gz`, `.tcx.gz`, and `.fit.gz` activity files, optionally
+matches them with a Strava activities CSV, writes generated HTML pages to disk, and
+serves an interactive local site. The root page is a shared index shell: it loads
+the app navigation once and displays one content page at a time.
 
-- **Heatmap** — every recorded GPS point aggregated into a frequency heatmap.
-- **Line Map** — every route drawn as a colored line, weighted/opacity-scaled by how
-  many times that stretch of road/trail has been traveled (well-worn routes render
-  bold; rarely-traveled ones stay thin but visible).
+### Pages and controls
 
-This mirrors a reference Python project (`heatmapController.py` /
-`linemapController.py`), reimplemented in C#.
+- **Weekly Mileage** shows separate, vertically stacked Run, Bike, and Other charts.
+  Each chart has its own date slider and Start, Older, Newer, and Latest buttons.
+  The chart window shows up to 26 weeks; Older/Newer move it by 12 weeks.
+- **Maps** shows one map at a time. Its in-map toggle switches between Heatmap and
+  Line Map while retaining the timeline position, map center, and zoom.
+- **Heatmap** displays activity points by category. Dated activities are revealed
+  chronologically; undated activities remain as a baseline. Start/Older sit to the
+  left of the slider and Newer/Latest to the right.
+- **Line Map** shows route activity in the current viewport. Its chronological
+  timeline uses the same controls. Panning or zooming recalculates which revealed
+  routes intersect the viewport.
 
-Both pages default to a **Chicago-centered view**, have a **checkbox per activity
-type** (colored to match that type) to show/hide it independently, and a **"Jump
-to" button control** — one button per preset location, all visible at once, no
-dropdown to open — that pans/zooms the map to one of four preset locations:
+Both maps include category visibility checkboxes, a Home button, and a Jump to
+control for these preset views:
 
-| Location | Lat | Lon | Zoom |
-|---|---|---|---|
+| Location | Latitude | Longitude | Zoom |
+|---|---:|---:|---:|
+| Chicago (default) | 41.9 | -87.64 | 11 |
+| Kalamazoo | 42.2 | -85.6 | 12 |
 | USA | 38.0 | -94.8 | 5 |
-| Chicago (default) | 42.0707 | -87.7368 | 10 |
-| Kalamazoo | 42.2 | -85.6 | 11 |
 | World | 20.0 | 0.0 | 3 |
 
-The button matching the map's current location is highlighted (blue); clicking
-another button pans/zooms the map and moves the highlight to it.
-
 ### Requirements
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) (or later)
-- Internet access when a map is open in your browser (loads Leaflet/tiles from
-  public CDNs) — no internet needed to run the C# program itself.
 
-### Run it
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later.
+- Internet access in the browser to load Leaflet, Chart.js, and map tiles from
+  public CDNs.
 
-**Option A — config file (shortest):**
-```
-cp gpxworldmap.config.example.json gpxworldmap.config.json
-# edit gpxworldmap.config.json with your actual paths
+### Run
+
+Copy `gpxworldmap.config.example.json` to `gpxworldmap.config.json`, set the input
+paths, then run:
+
+```sh
 dotnet run
 ```
 
-**Option B — command-line args:**
-```
-dotnet run -- "path/to/activity-folder" "path/to/activities.csv" heatmap.html linemap.html
-```
-- First argument: folder containing your .gpx.gz / .tcx.gz / .fit.gz files.
-- Remaining arguments can appear in any order: whichever ends in `.csv` is the
-  activities CSV; the first non-csv one is the heatmap output path, the second is
-  the line map output path.
-- Use a config file at a different path with `--config path/to/other.json`.
+Alternatively, pass positional arguments:
 
-The program writes both HTML files to disk **and** serves them from a local web
-server (an index page at `http://localhost:<port>/` links to both), since
-OpenStreetMap's tile servers reject requests with no Referer header — something
-browsers never send for pages opened via `file://`.
+```sh
+dotnet run -- "path/to/activity-folder" "path/to/activities.csv" \
+  heatmap.html linemap.html weekly-mileage.html
+```
+
+The first argument is the activity folder. Later arguments can include a CSV path
+in any position; the other positional values set heatmap, line-map, and weekly
+mileage output paths, in that order. Use `--config path/to/other.json` to load a
+configuration file from another location. Positional arguments override values
+from the config file.
+
+The app writes the three generated content pages to their configured paths and
+serves those pages plus the Maps page locally. Open the root URL printed by the
+program (for example, `http://localhost:<port>/`). Serving over HTTP is needed for
+map tiles; browser requests from `file://` pages do not include the expected
+Referer header.
+
+### Configuration
+
+The configuration fields are:
+
+| Field | Purpose |
+|---|---|
+| `GpxFolder` | Folder containing activity files; searches this folder only, not subfolders. |
+| `CsvFile` | Optional activities CSV used to match metadata and dates. |
+| `OutputHeatmapHtml` | Heatmap output path. |
+| `OutputLineMapHtml` | Line-map output path. |
+| `OutputWeeklyMileageHtml` | Weekly mileage output path. |
+| `CartoApiKey` | Optional CARTO tile API key. |
+
+Output paths default to `heatmaps/standard_heatmap.html`, `heatmaps/linemap.html`,
+and `heatmaps/weekly_mileage.html`. The local server routes each generated page by
+its filename, while the root index shell remains the application entry point.
+
+### Activity data and maps
+
+The optional CSV recognizes these headers (case-insensitive): `Activity ID`,
+`Activity Date`, `Activity Name`, `Activity Type`, `Activity Description`, and
+`Filename`. Matching uses the numeric ID in `Filename` first and falls back to
+`Activity ID`. Missing or unparseable dates are omitted from the mileage chart and
+chronological map timeline; if no dates are available, maps remain in their static
+all-activity view.
+
+The heatmap rounds coordinates to six decimal places and weights repeated points
+for contrast. The line map snaps routes to a 25-meter grid, counts distinct
+activities on each edge, and combines adjacent edges into lines with one of six
+frequency tiers. Route layers are created and drawn only when an activity is
+revealed in the timeline and its route bounds intersect the current map bounds.
 
 ### Project layout
 
-```
-GpxWorldMap/
-├── Program.cs                       # entry point -- orchestrates everything else
-├── Config/
-│   ├── AppConfig.cs                 # resolved settings for one run
-│   ├── ConfigFile.cs                # shape of the optional JSON config file
-│   └── AppConfigLoader.cs           # loads/merges config file and CLI args
-├── Models/
-│   ├── ActivityRecord.cs            # one row from the activities CSV
-│   ├── ActivityMeta.cs              # name/type/date/description/color for an activity
-│   ├── ParsedGpx.cs                 # segments + waypoints extracted from a file
-│   ├── ActivityTrack.cs             # one activity's geometry + type/color, shared
-│   │                                 by both map outputs
-│   └── MapLocation.cs               # a named jump-to location (lat/lon/zoom)
-├── Readers/
-│   ├── CsvReader.cs                 # reads and parses the activities CSV
-│   ├── GzHelper.cs                  # gzip decompression (text or raw bytes)
-│   ├── GpxReader.cs                 # parses GPX XML
-│   ├── TcxReader.cs                 # parses TCX XML (Garmin Training Center format)
-│   └── FitReader.cs                 # parses FIT's binary format
-├── Rendering/
-│   ├── ActivityColors.cs            # consistent color-per-activity-type logic
-│   ├── HeatmapDataBuilder.cs        # aggregates points into weighted heat data per type
-│   ├── RouteFrequencyMapBuilder.cs  # grid-snaps routes and scores edges by frequency
-│   ├── BookmarkControlScript.cs     # JS for the "jump to location" button control
-│   ├── ActivityTypeControlScript.cs # JS for the per-type checkbox control
-│   ├── HeatmapHtmlBuilder.cs        # assembles the heatmap page
-│   └── LineMapHtmlBuilder.cs        # assembles the line map page
-├── Server/
-│   └── LocalWebServer.cs            # serves both pages locally and opens your browser
-└── Shared/
-    ├── ActivityId.cs                # shared "extract ID from filename" logic
-    └── DefaultLocations.cs          # the four preset jump-to locations
+```text
+Program.cs                                  # input processing, data building, page routing
+Config/                                     # config models and CLI/config loading
+FileReader/FileTypeReaders/                 # CSV, GPX, TCX, FIT, and gzip readers
+Models/                                     # activity metadata, tracks, parsed geometry
+Shared/                                     # activity IDs, categories, distance, locations
+Rendering/                                  # HTML template loader and map rendering helpers
+Server/                                     # local HTTP server and browser launch
+Index/index.html                            # root shell with one app navigation
+Web.Features/Controls/                      # injected navigation and Leaflet controls
+Web.Features/Controls/Templates/            # control JavaScript templates
+Web.Features/Charts/WeeklyMileage/          # mileage aggregation, chart builder, template
+Web.Features/Maps/Heatmap/                  # chronological heatmap data and page
+Web.Features/Maps/Linemap/                  # chronological route data and page
+Web.Features/Maps/MapSwitcher/              # map toggle wrapper page
 ```
 
-### How the two maps are built
+The controls under `Web.Features/Controls` own their markup and JavaScript templates;
+page builders inject them where needed. The index shell injects app navigation once,
+instead of duplicating it on every content page.
 
-**Heatmap** (`HeatmapDataBuilder`): every recorded GPS point is rounded to a fixed
-precision and counted, per activity type, the same way the reference Python
-`Counter`/`defaultdict(Counter)` does — repeatedly-visited spots naturally end up
-"hotter". Each type gets its own `L.heatLayer`, toggled independently by its
-checkbox.
+### Tuning
 
-**Line Map** (`RouteFrequencyMapBuilder`): a C# port of the reference Python
-`linemapController`'s grid-snap + percentile-clip approach. Every activity's points
-are snapped to a ~15m grid (collapsing consecutive duplicate cells, which both
-smooths GPS jitter and identifies shared segments across activities), then each
-grid edge is scored by how many distinct activities *of that type* crossed it.
-Weight (1.2–3.5px) and opacity (0.35–0.95) scale with that score, clipped at the
-90th percentile so one mega-common commute doesn't wash out the rest of the scale.
-Each type gets its own colored polyline layer, toggled independently by its
-checkbox.
-
-**Jump-to control** (`BookmarkControlScript`): renders one button per
-`MapLocation`; clicking a button calls `map.setView([lat, lon], zoom)` and toggles
-an `active` CSS class so the current location stays visually highlighted. Shared
-verbatim by both pages.
-
-### Joining GPX files with your activities CSV
-
-Same matching rules as before: the tool reads five columns from your CSV (Activity
-ID, Activity Date, Activity Name, Activity Type, Activity Description, Filename),
-matching primarily by the numeric ID embedded in the **Filename** column and
-falling back to **Activity ID**. Files with no matching row are still plotted,
-labeled "Unknown"; CSV rows with no matching file are simply skipped.
-
-### Tweaking it
-- Grid size (15m), clip percentile (90th), and weight/opacity ranges for the line
-  map are constants at the top of `RouteFrequencyMapBuilder.cs`.
-- Heatmap point-rounding precision (6 decimal places) is a parameter on
-  `HeatmapDataBuilder.Build(...)`.
-- The four jump-to locations are in `Shared/DefaultLocations.cs` — add, remove, or
-  edit as needed; the button control adapts automatically to however many you list.
-- Button styling (`.bookmark-btn`, `.bookmark-btn.active`) lives in the `<style>`
-  block inside `HeatmapHtmlBuilder.cs` / `LineMapHtmlBuilder.cs`.
+- Edit the preset views in `Shared/DefaultLocations.cs`.
+- Change heatmap rounding and weight clipping in `HeatmapDataBuilder.Build(...)`.
+- Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
+- Change the mileage chart window and navigation step in
+  `Web.Features/Charts/WeeklyMileage/weeklymileage.html`.
