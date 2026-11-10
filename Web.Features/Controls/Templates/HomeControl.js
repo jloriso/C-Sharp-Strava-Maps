@@ -14,6 +14,7 @@ homeControl.addTo(map);
 var homeBtn = document.querySelector('.home-btn');
 if (homeBtn) {
     homeBtn.addEventListener('click', function () {
-        window.location.href = {{HOME_URL_JS}};
+        var homeWindow = window.self === window.top ? window : window.top;
+        homeWindow.location.href = {{HOME_URL_JS}};
     });
 }

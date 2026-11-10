@@ -11,7 +11,14 @@ if (window.self !== window.top) {
         button.addEventListener('click', function () {
             var targetMap = button.getAttribute('data-map');
             if (button.getAttribute('aria-pressed') === 'true') return;
-            window.parent.postMessage({ type: 'gpxworldmap-switch-map', map: targetMap }, window.location.origin);
+            var center = map.getCenter();
+            window.parent.postMessage({
+                type: 'gpxworldmap-switch-map',
+                map: targetMap,
+                count: Number(document.getElementById('timeline-slider').value),
+                center: { lat: center.lat, lng: center.lng },
+                zoom: map.getZoom()
+            }, window.location.origin);
         });
     });
 }

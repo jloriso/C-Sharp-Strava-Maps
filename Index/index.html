@@ -2,33 +2,22 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>{{APP_TITLE}}</title>
+    <title>GPX World Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        :root { --bg:#f6f8fb; --card:#fff; --text:#1f2937; --muted:#6b7280; --accent:#2563eb; }
-        body { margin:0; font-family:Segoe UI, Arial, sans-serif; background:var(--bg); color:var(--text); }
-        .wrap { max-width:900px; margin:40px auto; padding:0 16px; }
-        .card { background:var(--card); border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
-        h1 { margin-top:0; }
-        .muted { color:var(--muted); }
-        ul { padding-left:18px; }
-        a { color:var(--accent); text-decoration:none; }
-        a:hover { text-decoration:underline; }
-        .row { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; flex-direction: column; font: 14px sans-serif; }
+        .app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; flex: 0 0 auto; }
+        .app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
+        .app-nav .nav-link:hover { background: #333; color: #fff; }
+        .app-nav .nav-link.active { background: #3388ff; color: #fff; }
+        #page-frame { display: block; width: 100%; min-height: 0; flex: 1 1 auto; border: 0; }
     </style>
 </head>
 <body>
-<div class="wrap">
-    <div class="card">
-        <div class="row">
-            <h1>{{APP_TITLE}}</h1>
-            <div class="muted">{{GENERATED_AT}}</div>
-        </div>
-        <p class="muted">Choose a map:</p>
-        <ul>
-            {{MAP_LINKS_HTML}}
-        </ul>
-    </div>
-</div>
+<nav id="app-navigation" class="app-nav" aria-label="Main navigation"></nav>
+<iframe id="page-frame" title="Weekly Mileage"></iframe>
+<script>
+{{APP_NAVIGATION_CONTROL_SCRIPT}}
+</script>
 </body>
 </html>

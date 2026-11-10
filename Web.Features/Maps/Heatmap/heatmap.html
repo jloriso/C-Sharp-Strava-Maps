@@ -8,20 +8,18 @@
         html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
         #map { flex: 1 1 auto; }
         #timeline-controls {
-            display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; background: #fff; border-top: 1px solid #d5d9dc;
+            display: grid; grid-template-columns: auto auto minmax(100px, 1fr) auto auto auto auto; align-items: center;
+            gap: 8px; padding: 8px 12px; background: #fff; border-top: 1px solid #d5d9dc;
             color: #24292d; font: 13px sans-serif; flex: 0 0 auto;
         }
         #timeline-controls[hidden] { display: none; }
-        .timeline-navigation, .timeline-playback { display: flex; align-items: center; gap: 6px; }
-        .timeline-navigation { justify-content: center; }
-        .timeline-playback { width: 100%; }
         .timeline-button {
             min-width: 64px; height: 30px; padding: 0 10px; border: 1px solid #aeb6bc;
             border-radius: 4px; background: #f7f8f8; color: inherit; font: inherit; cursor: pointer;
         }
         .timeline-button:hover { background: #edf0f1; }
         .timeline-button:disabled { opacity: 0.4; cursor: default; }
-        #timeline-slider { flex: 1 1 auto; min-width: 0; accent-color: #16836d; }
+        #timeline-slider { width: 100%; min-width: 0; accent-color: #16836d; }
         #timeline-date { min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
         .map-type-buttons { display: flex; gap: 4px; }
         .map-type-btn { height: 30px; padding: 0 9px; border: 1px solid #ccc; border-radius: 3px; background: #f7f7f7; color: #24292d; font: 13px sans-serif; cursor: pointer; white-space: nowrap; }
@@ -29,15 +27,15 @@
         .map-type-btn:hover:not(.active) { background: #ececec; }
         .leaflet-top.leaflet-left .map-type-control { clear: none; margin-top: 10px; margin-left: 4px; }
         @media (max-width: 480px) {
-            .timeline-navigation { justify-content: space-between; }
-            .timeline-navigation .timeline-button { min-width: 0; padding: 0 7px; }
-            .timeline-playback { gap: 5px; }
-            #timeline-date { min-width: 72px; }
+            #timeline-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; }
+            #timeline-start { grid-column: 1; grid-row: 1; }
+            #timeline-older { grid-column: 2; grid-row: 1; }
+            #timeline-slider { grid-column: 1 / -1; grid-row: 2; }
+            #timeline-newer { grid-column: 3; grid-row: 1; }
+            #timeline-latest { grid-column: 4; grid-row: 1; }
+            #timeline-date { grid-column: 1 / 4; text-align: left; min-width: 0; }
+            #timeline-year { grid-column: 4; text-align: right; }
         }
-        .app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; flex: 0 0 auto; }
-        .app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
-        .app-nav .nav-link:hover { background: #333; color: #fff; }
-        .app-nav .nav-link.active { background: #3388ff; color: #fff; }
         .legend { background: white; padding: 8px 12px; font: 13px sans-serif; line-height: 1.6; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
         .legend .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; }
         .bookmark-buttons { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
@@ -62,30 +60,21 @@
     </style>
 </head>
 <body>
-{{NAV_BAR_HTML}}
 <div id="map"></div>
 <div id="timeline-controls" hidden>
-    <div class="timeline-navigation">
-        <button id="timeline-start" class="timeline-button" type="button">Start</button>
-        <button id="timeline-older" class="timeline-button" type="button">Older</button>
-        <button id="timeline-newer" class="timeline-button" type="button">Newer</button>
-        <button id="timeline-latest" class="timeline-button" type="button">Latest</button>
-    </div>
-    <div class="timeline-playback">
-        <button id="timeline-play" class="timeline-button" type="button" aria-label="Play timeline">Play</button>
-        <input type="range" id="timeline-slider" min="0" max="0" value="0" step="1" aria-label="Activities shown over time" />
-        <button id="timeline-speed" class="timeline-button" type="button" aria-label="Timeline duration">30s</button>
-        <output id="timeline-date" for="timeline-slider"></output>
-        <output id="timeline-year" for="timeline-slider"></output>
-    </div>
+    <button id="timeline-start" class="timeline-button" type="button">Start</button>
+    <button id="timeline-older" class="timeline-button" type="button">Older</button>
+    <input type="range" id="timeline-slider" min="0" max="0" value="0" step="1" aria-label="Activities shown over time" />
+    <button id="timeline-newer" class="timeline-button" type="button">Newer</button>
+    <button id="timeline-latest" class="timeline-button" type="button">Latest</button>
+    <output id="timeline-date" for="timeline-slider"></output>
+    <output id="timeline-year" for="timeline-slider"></output>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
     var undatedPointsByType = {{UNDATED_POINTS_BY_TYPE_JS}};
     var timelineActivities = {{TIMELINE_ACTIVITIES_JS}};
-    if (window.self !== window.top) document.querySelector('.app-nav').hidden = true;
-
     var map = L.map('map', { zoomControl: false }).setView({{INITIAL_VIEW_JS}});
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     

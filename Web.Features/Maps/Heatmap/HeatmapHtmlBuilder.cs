@@ -16,10 +16,6 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
             string timelineActivitiesJs,
             List<(string Type, string Color)> types,
             List<MapLocation> locations,
-            string heatmapHref,
-            string lineMapHref,
-            string weeklyMileageHref,
-            string mapsHref,
             string? cartoApiKey)
         {
             string bookmarkScript = BookmarkControlScript.Build(locations);
@@ -29,7 +25,6 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
             string timelineControlScript = TimelineControlScript.Build();
             var initial = locations.FirstOrDefault() ?? new MapLocation { Lat = 20.0, Lon = 0.0, Zoom = 3 };
             string initialViewJs = $"[{(initial.Lat)}, {(initial.Lon)}], {initial.Zoom}";
-            string navBarHtml = NavBarBuilder.BuildHtml("heatmap", weeklyMileageHref, heatmapHref, lineMapHref, mapsHref);
             string cartoApiQuery = string.IsNullOrWhiteSpace(cartoApiKey)
                 ? ""
                 : "?key=" + Uri.EscapeDataString(cartoApiKey);
@@ -43,7 +38,6 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
                 .Replace("{{MAP_TYPE_CONTROL_SCRIPT}}", mapTypeControlScript)
                 .Replace("{{TIMELINE_CONTROL_SCRIPT}}", timelineControlScript)
                 .Replace("{{INITIAL_VIEW_JS}}", initialViewJs)
-                .Replace("{{NAV_BAR_HTML}}", navBarHtml)
                 .Replace("{{CARTO_API_QUERY}}", cartoApiQuery);
         }
     }

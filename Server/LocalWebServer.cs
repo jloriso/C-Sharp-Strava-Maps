@@ -12,10 +12,10 @@ namespace GpxWorldMap.Server
     /// browsers never send one for file:// pages.</summary>
     public static class LocalWebServer
     {
-        /// <param name="indexHtml">Served at the site root ("/") -- the Weekly Mileage
-        /// chart, which acts as the app's home page.</param>
+        /// <param name="indexHtml">Served at the site root ("/") and owns the shared
+        /// app navigation and content iframe.</param>
         /// <param name="otherPages">Maps a URL path (e.g. "heatmap.html") to its full
-        /// HTML content, for every other page (currently the heatmap and line map).</param>
+        /// HTML content, for each generated content page.</param>
         public static void Serve(string indexHtml, Dictionary<string, string> otherPages)
         {
             int port = GetFreePort();
@@ -26,7 +26,7 @@ namespace GpxWorldMap.Server
             listener.Start();
 
             Console.WriteLine($"Serving pages at {baseUrl}");
-            Console.WriteLine($"  {baseUrl}  (Weekly Mileage -- home page)");
+            Console.WriteLine($"  {baseUrl}  (application index)");
             foreach (var name in otherPages.Keys)
                 Console.WriteLine($"  {baseUrl}{name}");
             Console.WriteLine("Press Ctrl+C to stop the server when you're done viewing it.");

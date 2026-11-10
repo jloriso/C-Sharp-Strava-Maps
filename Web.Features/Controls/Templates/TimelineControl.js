@@ -2,15 +2,9 @@ var timelineControlRoot = document.getElementById('timeline-controls');
 var timelineSlider = document.getElementById('timeline-slider');
 var timelineDate = document.getElementById('timeline-date');
 var timelineYear = document.getElementById('timeline-year');
-var timelinePlayButton = document.getElementById('timeline-play');
-var timelineSpeedButton = document.getElementById('timeline-speed');
-var timelineTimer = null;
-var timelineSpeedOptions = [30000, 15000, 7500];
-var timelineSpeedLabels = ['30s', '15s', '7.5s'];
-var timelineSpeedIndex = 0;
 var timelineStep = Math.max(1, Math.ceil(timelineActivities.length / 10));
 
-function updateTimelineCount(count) {
+function updateTimelineCount(count, notifyParent) {
     count = Math.max(0, Math.min(timelineActivities.length, count));
     timelineSlider.value = String(count);
     timelineDate.textContent = count === 0
@@ -22,24 +16,9 @@ function updateTimelineCount(count) {
     document.getElementById('timeline-newer').disabled = count === timelineActivities.length;
     document.getElementById('timeline-latest').disabled = count === timelineActivities.length;
     if (typeof window.onTimelineChange === 'function') window.onTimelineChange(count);
-}
-
-function stopTimelinePlayback() {
-    if (timelineTimer !== null) window.clearInterval(timelineTimer);
-    timelineTimer = null;
-    timelinePlayButton.textContent = 'Play';
-    timelinePlayButton.setAttribute('aria-label', 'Play timeline');
-}
-
-function startTimelinePlayback() {
-    if (Number(timelineSlider.value) >= timelineActivities.length) updateTimelineCount(0);
-    timelinePlayButton.textContent = 'Pause';
-    timelinePlayButton.setAttribute('aria-label', 'Pause timeline');
-    timelineTimer = window.setInterval(function () {
-        var next = Number(timelineSlider.value) + 1;
-        updateTimelineCount(next);
-        if (next >= timelineActivities.length) stopTimelinePlayback();
-    }, Math.max(1, timelineSpeedOptions[timelineSpeedIndex] / timelineActivities.length));
+    if (notifyParent !== false && window.self !== window.top) {
+        window.parent.postMessage({ type: 'gpxworldmap-timeline-position', count: count }, window.location.origin);
+    }
 }
 
 timelineSlider.max = String(timelineActivities.length);
@@ -55,16 +34,14 @@ document.getElementById('timeline-newer').addEventListener('click', function () 
 document.getElementById('timeline-latest').addEventListener('click', function () {
     updateTimelineCount(timelineActivities.length);
 });
-timelinePlayButton.addEventListener('click', function () {
-    if (timelineTimer === null) startTimelinePlayback(); else stopTimelinePlayback();
-});
-timelineSpeedButton.addEventListener('click', function () {
-    timelineSpeedIndex = (timelineSpeedIndex + 1) % timelineSpeedOptions.length;
-    timelineSpeedButton.textContent = timelineSpeedLabels[timelineSpeedIndex];
-    timelineSpeedButton.setAttribute('aria-label', 'Timeline duration ' + timelineSpeedLabels[timelineSpeedIndex]);
-    if (timelineTimer !== null) {
-        stopTimelinePlayback();
-        startTimelinePlayback();
+window.addEventListener('message', function (event) {
+    if (window.self === window.top || event.source !== window.parent || event.origin !== window.location.origin) return;
+    if (!event.data || event.data.type !== 'gpxworldmap-set-map-state') return;
+    updateTimelineCount(Number(event.data.count) || 0, false);
+    var center = event.data.center;
+    var zoom = Number(event.data.zoom);
+    if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng) && Number.isFinite(zoom)) {
+        map.setView([center.lat, center.lng], zoom);
     }
 });
 updateTimelineCount(0);

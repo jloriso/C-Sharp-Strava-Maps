@@ -7,6 +7,7 @@ using GpxWorldMap.Rendering;
 using GpxWorldMap.Server;
 using GpxWorldMap.Shared;
 using GpxWorldMap.Web.Features.Charts.WeeklyMileage;
+using GpxWorldMap.Web.Features.Controls;
 using GpxWorldMap.Web.Features.Maps.Heatmap;
 using GpxWorldMap.Web.Features.Maps.Linemap;
 using GpxWorldMap.Web.Features.Maps.MapSwitcher;
@@ -138,28 +139,22 @@ namespace GpxWorldMap
 
             var locations = DefaultLocations.Standard();
 
-            // Every page's nav bar needs to know where the other two live. The
-            // Weekly Mileage chart is served at the site root ("/"), since it's now
-            // the home page (see LocalWebServer.Serve below); the other two use
-            // whatever filenames you've configured, so hrefs are computed from the
-            // actual configured paths rather than hardcoded, and stay correct no
-            // matter what you rename OutputHeatmapHtml/OutputLineMapHtml to.
+            // The index shell owns navigation; generated pages are loaded into its iframe.
             string heatmapHref = Path.GetFileName(config.OutputHeatmapHtml);
             string lineMapHref = Path.GetFileName(config.OutputLineMapHtml);
+            string weeklyMileageHref = Path.GetFileName(config.OutputWeeklyMileageHtml);
             const string mapsHref = "maps.html";
-            const string weeklyMileageHref = "/";
 
             Console.WriteLine("\nBuilding heatmap...");
             var heat = HeatmapDataBuilder.Build(tracks);
             string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(
-                heat.UndatedByTypeJs, heat.TimelineActivitiesJs, categoryColors, locations,
-                heatmapHref, lineMapHref, weeklyMileageHref, mapsHref, config.CartoApiKey);
+                heat.UndatedByTypeJs, heat.TimelineActivitiesJs, categoryColors, locations, config.CartoApiKey);
 
             Console.WriteLine("Building line map (computing route frequency)...");
             var lineData = LineMapDataBuilder.Build(tracks);
             var linemapHtml = LineMapHtmlBuilder.BuildHtml(
                 lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs,
-                categoryColors, locations, heatmapHref, lineMapHref, weeklyMileageHref, mapsHref, config.CartoApiKey);
+                categoryColors, locations, config.CartoApiKey);
         
             Console.WriteLine("Building weekly mileage chart...");
             var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
@@ -167,19 +162,24 @@ namespace GpxWorldMap
                 Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
                                   "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
             var weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
-                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors,
-                heatmapHref, lineMapHref, weeklyMileageHref, mapsHref);
+                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors);
             string mapsHtml = MapSwitcherHtmlBuilder.BuildHtml(
-                weeklyMileageHref, heatmapHref, lineMapHref, mapsHref);
+                heatmapHref, lineMapHref);
+            string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
+            {
+                ("weeklymileage", "Weekly Mileage", weeklyMileageHref),
+                ("maps", "Maps", mapsHref),
+                ("heatmap", "Heatmap", heatmapHref),
+                ("linemap", "Line Map", lineMapHref)
+            }, "weeklymileage");
 
             WriteFile(config.OutputHeatmapHtml, heatmapHtml);
             WriteFile(config.OutputLineMapHtml, linemapHtml);
             WriteFile(config.OutputWeeklyMileageHtml, weeklyMileageHtml);
 
-            // The Weekly Mileage page is served as the home page ("/"); the heatmap
-            // and line map are served under their configured filenames alongside it.
-            LocalWebServer.Serve(weeklyMileageHtml, new Dictionary<string, string>
+            LocalWebServer.Serve(indexHtml, new Dictionary<string, string>
             {
+                [weeklyMileageHref] = weeklyMileageHtml,
                 [heatmapHref] = heatmapHtml,
                 [lineMapHref] = linemapHtml,
                 [mapsHref] = mapsHtml,

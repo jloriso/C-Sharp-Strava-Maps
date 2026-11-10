@@ -19,20 +19,14 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
         public static string BuildHtml(
             string weeksJs,
             string seriesByTypeJs,
-            List<(string Type, string Color)> categories,
-            string heatmapHref,
-            string lineMapHref,
-            string weeklyMileageHref,
-            string mapsHref)
+            List<(string Type, string Color)> categories)
         {
             string typeColorsJs = BuildTypeColorsJs(categories);
-            string navBarHtml = NavBarBuilder.BuildHtml("weeklymileage", weeklyMileageHref, heatmapHref, lineMapHref, mapsHref);
 
             return HtmlTemplateLoader.Load("Features/WeeklyMileage", "weeklymileage.html")
                 .Replace("{{WEEKS_JS}}", weeksJs)
                 .Replace("{{SERIES_BY_TYPE_JS}}", seriesByTypeJs)
-                .Replace("{{TYPE_COLORS_JS}}", typeColorsJs)
-                .Replace("{{NAV_BAR_HTML}}", navBarHtml);
+                .Replace("{{TYPE_COLORS_JS}}", typeColorsJs);
         }
 
         private static string BuildTypeColorsJs(List<(string Type, string Color)> categories)
