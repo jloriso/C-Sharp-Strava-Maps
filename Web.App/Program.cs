@@ -18,8 +18,9 @@ namespace GpxWorldMap
     /// Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
     /// extracts tracks/routes/waypoints, optionally joins each one against a Strava-style
     /// activities CSV (matched by the numeric ID in the CSV's Filename column, falling
-    /// back to Activity ID), and produces three pages, all served locally and linked
-    /// via a shared nav bar:
+    /// back to Activity ID), and produces three pages, all served locally. A shared nav
+    /// bar links Weekly Mileage and Maps; the two maps are reached only through the Maps
+    /// page's Line Map / Heatmap toggle:
     ///
     ///   - a Strava-style weekly mileage chart, filterable by Run/Bike/Other and
     ///     scrollable back through the full history (WeeklyMileageDataBuilder /
@@ -168,9 +169,7 @@ namespace GpxWorldMap
             string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
             {
                 ("weeklymileage", "Weekly Mileage", weeklyMileageHref),
-                ("maps", "Maps", mapsHref),
-                ("heatmap", "Heatmap", heatmapHref),
-                ("linemap", "Line Map", lineMapHref)
+                ("maps", "Maps", mapsHref)
             }, "weeklymileage");
 
             WriteFile(config.OutputHeatmapHtml, heatmapHtml);

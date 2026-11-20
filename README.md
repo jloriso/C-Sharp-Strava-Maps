@@ -10,11 +10,12 @@ the app navigation once and displays one content page at a time.
 - **Weekly Mileage** shows separate, vertically stacked Run, Bike, and Other charts.
   Each chart has its own date slider and Start, Older, Newer, and Latest buttons.
   The chart window shows up to 26 weeks; Older/Newer move it by 12 weeks.
-- **Maps** shows one map at a time. Its Heatmap / Line Map toggle (only on this page)
-  switches maps while retaining the timeline date, activity type selection, map
-  center, and zoom. The current
-  map stays visible until the other has loaded and rendered; both stay loaded
-  afterwards, so switching back is immediate.
+- **Maps** shows one map at a time, opening on the Line Map. Its Line Map / Heatmap
+  toggle is the only way to reach the two maps (they are not in the top navigation);
+  switching retains the timeline date, activity type selection, map center, and zoom.
+  The current map stays visible until the other has loaded and rendered; both stay
+  loaded afterwards, so switching back is immediate. On first load a spinning globe
+  is shown until the map has rendered, then the map and toggle appear together.
 - **Heatmap** displays activity points by category. It opens at Latest with every
   activity shown; the timeline steps back through dated activities chronologically,
   and undated activities remain as a baseline. Start/Older sit to the

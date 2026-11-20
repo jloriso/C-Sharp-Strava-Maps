@@ -18,6 +18,8 @@ interface MapFrame {
 
 /** Fallback in case a map page never confirms it applied the state. */
 const revealTimeoutMs = 5000;
+/** Fallback in case the first map never reports that it is ready. */
+const loadingTimeoutMs = 15000;
 
 const data = readPageData<MapSwitcherPageData>();
 const stage = getElement('map-stage');
@@ -28,10 +30,18 @@ const mapTitles: Record<MapKind, string> = { heatmap: 'Heatmap', linemap: 'Line 
 const state: Omit<SetMapStateMessage, 'type' | 'requestId'> =
   { count: 0, date: null, center: null, zoom: null, hiddenTypes: [] };
 const frames = new Map<MapKind, MapFrame>();
-let activeKind: MapKind = 'heatmap';
+let activeKind: MapKind = 'linemap';
 let targetKind: MapKind | null = null;
 let requestId = 0;
 let revealTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Shows the page (map, toggle) all at once and removes the globe loader from maps.html. */
+function finishLoading(): void {
+  clearTimeout(loadingTimer);
+  document.body.classList.remove('is-loading');
+  document.getElementById('page-loader')?.remove();
+}
+const loadingTimer = setTimeout(finishLoading, loadingTimeoutMs);
 
 function createFrame(kind: MapKind, visible: boolean): MapFrame {
   const iframe = document.createElement('iframe');
@@ -92,6 +102,7 @@ window.addEventListener('message', (event: MessageEvent<MapPageMessage>) => {
   switch (message.type) {
     case 'gpxworldmap-map-ready':
       frame.ready = true;
+      if (frame.kind === activeKind) finishLoading();
       if (frame.kind === targetKind) syncTarget(frame);
       return;
     case 'gpxworldmap-map-state-applied':

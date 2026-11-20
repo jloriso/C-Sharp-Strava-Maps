@@ -32,7 +32,8 @@ export function listenForMapState(map: L.Map, timeline: TimelineControl, activit
       postToParent({ type: 'gpxworldmap-map-state-applied', requestId: message.requestId }));
   });
 
-  postToParent({ type: 'gpxworldmap-map-ready' });
+  // Sent once the initial view has rendered, so the MapSwitcher can drop its loading screen.
+  void whenRendered(map).then(() => postToParent({ type: 'gpxworldmap-map-ready' }));
 }
 
 /** Resolves once visible tiles have loaded (or a timeout passes) and canvas layers have painted. */

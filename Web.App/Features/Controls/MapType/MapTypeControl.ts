@@ -3,8 +3,8 @@ import '../../Shared/legend.css';
 import type { MapKind } from '../../Shared/types';
 
 const mapTypes: { kind: MapKind; label: string }[] = [
-  { kind: 'heatmap', label: 'Heatmap' },
   { kind: 'linemap', label: 'Line Map' },
+  { kind: 'heatmap', label: 'Heatmap' },
 ];
 
 export interface MapTypeControl {

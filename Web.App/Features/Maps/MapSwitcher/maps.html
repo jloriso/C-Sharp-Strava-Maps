@@ -5,8 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Maps</title>
 </head>
-<body>
+<body class="is-loading">
 <div id="map-stage"></div>
+<!-- Shown until the first map has rendered (removed by maps.ts). -->
+<div id="page-loader" role="status" aria-label="Loading maps">
+    <svg class="globe-spinner" viewBox="-26 -26 52 52" width="64" height="64" aria-hidden="true">
+        <circle class="globe-sea" r="22" />
+        <g class="globe-lines">
+            <ellipse rx="22" ry="7" />
+            <line x1="-22" x2="22" />
+            <path d="M -19 -11 H 19 M -19 11 H 19" />
+            <!-- Meridians: rx follows |sin| of the rotation angle, so the wireframe appears to spin. -->
+            <ellipse ry="22" rx="0">
+                <animate attributeName="rx" values="0;22;0" keyTimes="0;0.5;1" calcMode="spline"
+                         keySplines="0.2 0.6 0.4 1; 0.6 0 0.8 0.4" dur="2.4s" begin="0s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse ry="22" rx="0">
+                <animate attributeName="rx" values="0;22;0" keyTimes="0;0.5;1" calcMode="spline"
+                         keySplines="0.2 0.6 0.4 1; 0.6 0 0.8 0.4" dur="2.4s" begin="-0.8s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse ry="22" rx="0">
+                <animate attributeName="rx" values="0;22;0" keyTimes="0;0.5;1" calcMode="spline"
+                         keySplines="0.2 0.6 0.4 1; 0.6 0 0.8 0.4" dur="2.4s" begin="-1.6s" repeatCount="indefinite" />
+            </ellipse>
+            <circle r="22" />
+        </g>
+    </svg>
+    <div class="loader-text">Loading maps&hellip;</div>
+</div>
 <script id="page-data" type="application/json">{{PAGE_DATA_JSON}}</script>
 <script type="module" src="./maps.ts"></script>
 </body>

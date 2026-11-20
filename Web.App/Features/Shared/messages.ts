@@ -8,7 +8,7 @@ export interface TimelinePosition {
   date: string | null;
 }
 
-/** Map page -> parent: the map page has loaded and is listening for state. */
+/** Map page -> parent: the map page has loaded, rendered its initial view, and is listening for state. */
 export interface MapReadyMessage {
   type: 'gpxworldmap-map-ready';
 }
