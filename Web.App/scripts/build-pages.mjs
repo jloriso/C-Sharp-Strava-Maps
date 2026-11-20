@@ -13,6 +13,7 @@ const pages = [
   'Features/Maps/Heatmap/heatmap.html',
   'Features/Maps/Linemap/linemap.html',
   'Features/Maps/MapSwitcher/maps.html',
+  'Features/Activities/ActivityFeed/activities.html',
 ];
 
 await rm(path.join(root, 'dist'), { recursive: true, force: true });

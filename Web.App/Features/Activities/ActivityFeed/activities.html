@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Activities</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+<main id="page">
+    <header class="feed-header">
+        <h1>Activities</h1>
+        <output id="feed-count"></output>
+    </header>
+    <div id="feed"></div>
+    <div id="feed-status" role="status" aria-live="polite"></div>
+    <div id="feed-sentinel" aria-hidden="true"></div>
+</main>
+<script id="page-data" type="application/json">{{PAGE_DATA_JSON}}</script>
+<script type="module" src="./activities.ts"></script>
+</body>
+</html>

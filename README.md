@@ -23,6 +23,13 @@ the app navigation once and displays one content page at a time.
 - **Line Map** shows route activity in the current viewport, also opening at Latest
   with all routes drawn. Its chronological timeline uses the same controls. Panning
   or zooming recalculates which revealed routes intersect the viewport.
+- **Activities** is a feed of every activity with a route, newest first, grouped
+  under month headings. Each card shows the route on its own line map (with start
+  and finish markers), the distance, the time (the CSV's Moving Time, falling back
+  to Elapsed Time), and the pace (runs, walks, and hikes) or speed (everything else).
+  Scrolling down keeps loading older activities until the very first one. The
+  activities are fetched 20 at a time from `activity-feed/page-N.json`, and each card's map
+  only exists while it is near the screen.
 
 Both maps include category visibility checkboxes, a Home button, and a Jump to
 control for these preset views (a view is highlighted only while the map is still
@@ -127,6 +134,7 @@ Web.App/Features/Maps/Shared/               # base map setup and shared map sett
 Web.App/Features/Maps/Heatmap/              # chronological heatmap data and page
 Web.App/Features/Maps/Linemap/              # chronological route data and page
 Web.App/Features/Maps/MapSwitcher/          # map toggle wrapper page
+Web.App/Features/Activities/ActivityFeed/   # paged per-activity feed data and page
 ```
 
 Each page is an `.html` + `.ts` (+ `.css`) next to its C# `*HtmlBuilder`. The C#
@@ -157,3 +165,5 @@ the npm step.
 - Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
 - Change the mileage chart window and navigation step in
   `Web.App/Features/Charts/WeeklyMileage/weeklymileage.ts`.
+- Change the activity feed page size and route simplification tolerance in
+  `ActivityFeedDataBuilder.cs`.

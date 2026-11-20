@@ -15,7 +15,8 @@ namespace GpxWorldMap.Server
         /// <param name="indexHtml">Served at the site root ("/") and owns the shared
         /// app navigation and content iframe.</param>
         /// <param name="otherPages">Maps a URL path (e.g. "heatmap.html") to its full
-        /// HTML content, for each generated content page.</param>
+        /// content, for each generated page or data file. The content type comes from
+        /// the path's extension (.json is served as JSON, everything else as HTML).</param>
         public static void Serve(string indexHtml, Dictionary<string, string> otherPages)
         {
             int port = GetFreePort();
@@ -27,7 +28,7 @@ namespace GpxWorldMap.Server
 
             Console.WriteLine($"Serving pages at {baseUrl}");
             Console.WriteLine($"  {baseUrl}  (application index)");
-            foreach (var name in otherPages.Keys)
+            foreach (var name in otherPages.Keys.Where(n => n.EndsWith(".html", StringComparison.OrdinalIgnoreCase)))
                 Console.WriteLine($"  {baseUrl}{name}");
             Console.WriteLine("Press Ctrl+C to stop the server when you're done viewing it.");
             TryOpenBrowser(baseUrl);
@@ -39,16 +40,18 @@ namespace GpxWorldMap.Server
                 catch (HttpListenerException) { break; }
 
                 string path = ctx.Request.Url?.AbsolutePath.TrimStart('/') ?? "";
-                string? html = path.Length == 0 ? indexHtml : (otherPages.TryGetValue(path, out var page) ? page : null);
+                string? content = path.Length == 0 ? indexHtml : (otherPages.TryGetValue(path, out var page) ? page : null);
 
                 using var response = ctx.Response;
-                if (html == null)
+                response.ContentType = content != null && path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                    ? "application/json; charset=utf-8"
+                    : "text/html; charset=utf-8";
+                if (content == null)
                 {
                     response.StatusCode = 404;
-                    html = "Not found.";
+                    content = "Not found.";
                 }
-                var bytes = Encoding.UTF8.GetBytes(html);
-                response.ContentType = "text/html; charset=utf-8";
+                var bytes = Encoding.UTF8.GetBytes(content);
                 response.ContentLength64 = bytes.Length;
                 response.OutputStream.Write(bytes, 0, bytes.Length);
             }

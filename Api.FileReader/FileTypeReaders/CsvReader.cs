@@ -20,6 +20,10 @@ namespace GpxWorldMap.FileInterpreter.FileTypeReaders
             int idxType = FindColumn(header, "Activity Type");
             int idxDesc = FindColumn(header, "Activity Description");
             int idxFilename = FindColumn(header, "Filename");
+            // Strava exports have two "Elapsed Time" columns; both are in seconds, and
+            // FindColumn takes the first.
+            int idxElapsed = FindColumn(header, "Elapsed Time");
+            int idxMoving = FindColumn(header, "Moving Time");
 
             if (idxId < 0)
                 Console.WriteLine("Warning: couldn't find an 'Activity ID' column in the CSV header.");
@@ -37,7 +41,9 @@ namespace GpxWorldMap.FileInterpreter.FileTypeReaders
                     Get(idxName).Trim(),
                     Get(idxType).Trim(),
                     Get(idxDesc).Trim(),
-                    Get(idxFilename).Trim()));
+                    Get(idxFilename).Trim(),
+                    Get(idxElapsed).Trim(),
+                    Get(idxMoving).Trim()));
             }
             return result;
         }
