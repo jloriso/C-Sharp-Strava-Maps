@@ -1,4 +1,4 @@
-﻿using GpxWorldMap.Rendering;
+using GpxWorldMap.Rendering;
 
 namespace GpxWorldMap.Web.Features.Controls
 {
@@ -15,7 +15,7 @@ namespace GpxWorldMap.Web.Features.Controls
                 .Replace("\\", "\\\\")
                 .Replace("\"", "\\\"");
 
-            return HtmlTemplateLoader.Load("Controls/Templates", "HomeControl.js")
+            return HtmlTemplateLoader.Load("Features/Controls/Home", "HomeControl.js")
                 .Replace("{{HOME_URL_JS}}", $"\"{escaped}\"");
         }
     }

@@ -31,7 +31,7 @@ namespace GpxWorldMap.Controls
                     .Append("</label>");
             }
 
-            return HtmlTemplateLoader.Load("Controls/Templates", "ActivityTypeControl.js")
+            return HtmlTemplateLoader.Load("Features/Controls/ActivityType", "ActivityTypeControl.js")
                 .Replace("{{ACTIVITY_TYPE_ROWS_HTML}}", rows.ToString());
         }
 

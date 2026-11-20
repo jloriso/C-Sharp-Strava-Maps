@@ -1,6 +1,7 @@
 using GpxWorldMap.Rendering;
+using GpxWorldMap.Web.Features.Controls;
 
-namespace GpxWorldMap.Web.Features.Controls
+namespace GpxWorldMap.Web.Index
 {
     public static class IndexHtmlBuilder
     {

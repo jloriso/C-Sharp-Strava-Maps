@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <Content Include="index.html" CopyToOutputDirectory="PreserveNewest">
-      <TargetPath>Index/index.html</TargetPath>
-    </Content>
-  </ItemGroup>
-
-</Project>

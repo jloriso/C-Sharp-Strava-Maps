@@ -13,9 +13,12 @@
     <ProjectReference Include="..\Api.FileReader\Api.FileReader.csproj" />
     <ProjectReference Include="..\Api.Models\Api.Models.csproj" />
     <ProjectReference Include="..\Api.Shared\Api.Shared.csproj" />
-    <ProjectReference Include="..\Web.Features\Web.Features.csproj" />
     <ProjectReference Include="..\Web.Rendering\Web.Rendering.csproj" />
     <ProjectReference Include="..\Web.Server\Web.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Index/*.html;Features/**/*.html;Features/**/*.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

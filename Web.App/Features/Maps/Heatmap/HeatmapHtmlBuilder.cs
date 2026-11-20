@@ -29,7 +29,7 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
                 ? ""
                 : "?key=" + Uri.EscapeDataString(cartoApiKey);
 
-            return HtmlTemplateLoader.Load("Features/Heatmap","heatmap.html")
+            return HtmlTemplateLoader.Load("Features/Maps/Heatmap","heatmap.html")
                 .Replace("{{UNDATED_POINTS_BY_TYPE_JS}}", undatedPointsByTypeJs)
                 .Replace("{{TIMELINE_ACTIVITIES_JS}}", timelineActivitiesJs)
                 .Replace("{{BOOKMARK_CONTROL_SCRIPT}}", bookmarkScript)

@@ -37,7 +37,7 @@ namespace GpxWorldMap.Web.Features.Controls
             }
             lookup.Append("}");
 
-            return HtmlTemplateLoader.Load("Controls/Templates", "BookmarkControl.js")
+            return HtmlTemplateLoader.Load("Features/Controls/Bookmark", "BookmarkControl.js")
                 .Replace("{{BOOKMARK_LOCATIONS_JS}}", lookup.ToString())
                 .Replace("{{BOOKMARK_BUTTONS_HTML}}", buttons.ToString());
         }

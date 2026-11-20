@@ -14,7 +14,7 @@ namespace GpxWorldMap.Web.Features.Controls
                 href = link.Href
             }));
 
-            return HtmlTemplateLoader.Load("Controls/Templates", "AppNavigationControl.js")
+            return HtmlTemplateLoader.Load("Features/Controls/AppNavigation", "AppNavigationControl.js")
                 .Replace("{{NAVIGATION_LINKS_JS}}", linksJs)
                 .Replace("{{INITIAL_PAGE_JS}}", JsonSerializer.Serialize(initialPage));
         }

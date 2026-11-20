@@ -32,7 +32,7 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
                 ? ""
                 : "?key=" + Uri.EscapeDataString(cartoApiKey);
 
-            return HtmlTemplateLoader.Load("Features/Linemap","linemap.html")
+            return HtmlTemplateLoader.Load("Features/Maps/Linemap","linemap.html")
                 .Replace("{{LINE_DATA_BY_TYPE_JS}}", lineDataByTypeJs)
                 .Replace("{{UNDATED_ACTIVITIES_JS}}", undatedActivitiesJs)
                 .Replace("{{TIMELINE_ACTIVITIES_JS}}", timelineActivitiesJs)

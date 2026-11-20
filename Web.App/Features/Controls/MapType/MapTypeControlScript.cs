@@ -14,7 +14,7 @@ namespace GpxWorldMap.Web.Features.Controls
                 + "\" data-map=\"linemap\" aria-pressed=\"" + (activeMap == "linemap" ? "true" : "false")
                 + "\">Line Map</button>";
 
-            return HtmlTemplateLoader.Load("Controls/Templates", "MapTypeControl.js")
+            return HtmlTemplateLoader.Load("Features/Controls/MapType", "MapTypeControl.js")
                 .Replace("{{MAP_TYPE_BUTTONS_HTML}}", buttons);
         }
     }

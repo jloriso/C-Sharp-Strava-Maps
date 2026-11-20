@@ -7,10 +7,10 @@ using GpxWorldMap.Rendering;
 using GpxWorldMap.Server;
 using GpxWorldMap.Shared;
 using GpxWorldMap.Web.Features.Charts.WeeklyMileage;
-using GpxWorldMap.Web.Features.Controls;
 using GpxWorldMap.Web.Features.Maps.Heatmap;
 using GpxWorldMap.Web.Features.Maps.Linemap;
 using GpxWorldMap.Web.Features.Maps.MapSwitcher;
+using GpxWorldMap.Web.Index;
 
 namespace GpxWorldMap
 {

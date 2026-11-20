@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using GpxWorldMap.Rendering;
 
 namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
@@ -23,7 +23,7 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
         {
             string typeColorsJs = BuildTypeColorsJs(categories);
 
-            return HtmlTemplateLoader.Load("Features/WeeklyMileage", "weeklymileage.html")
+            return HtmlTemplateLoader.Load("Features/Charts/WeeklyMileage", "weeklymileage.html")
                 .Replace("{{WEEKS_JS}}", weeksJs)
                 .Replace("{{SERIES_BY_TYPE_JS}}", seriesByTypeJs)
                 .Replace("{{TYPE_COLORS_JS}}", typeColorsJs);

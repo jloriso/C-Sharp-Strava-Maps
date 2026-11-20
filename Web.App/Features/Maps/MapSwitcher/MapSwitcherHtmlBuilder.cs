@@ -11,7 +11,7 @@ namespace GpxWorldMap.Web.Features.Maps.MapSwitcher
         {
             var encoder = HtmlEncoder.Default;
 
-            return HtmlTemplateLoader.Load("Features/MapSwitcher", "maps.html")
+            return HtmlTemplateLoader.Load("Features/Maps/MapSwitcher", "maps.html")
                 .Replace("{{HEATMAP_HREF}}", encoder.Encode(heatmapHref))
                 .Replace("{{LINEMAP_HREF}}", encoder.Encode(lineMapHref));
         }
