@@ -7,7 +7,12 @@ namespace GpxWorldMap.Models
     public class ActivityTrack
     {
         public string ActivityId = "";
+        public string Name = "";
         public string Type = "";
+        public string Description = "";
+
+        /// <summary>The CSV's Activity Gear value ("" when none).</summary>
+        public string Gear = "";
         public string Color = "#3388ff";
         public List<List<(double Lat, double Lon)>> Segments = new();
 
@@ -26,5 +31,10 @@ namespace GpxWorldMap.Models
         /// (see Shared/GeoDistance.cs). Computed once in Program.cs after parsing, so
         /// the weekly mileage chart doesn't need to re-walk every segment itself.</summary>
         public double DistanceMeters;
+
+        /// <summary>From the CSV's Elapsed Time / Moving Time columns (seconds), when
+        /// present and parseable. Used by the activity feed's time and pace/speed.</summary>
+        public double? ElapsedSeconds;
+        public double? MovingSeconds;
     }
 }

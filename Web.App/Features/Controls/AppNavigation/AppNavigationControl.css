@@ -1,0 +1,4 @@
+.app-nav { display: flex; gap: 4px; padding: 8px 12px; background: #222; flex: 0 0 auto; }
+.app-nav .nav-link { color: #ddd; text-decoration: none; font: 13px sans-serif; padding: 6px 10px; border-radius: 4px; }
+.app-nav .nav-link:hover { background: #333; color: #fff; }
+.app-nav .nav-link.active { background: #3388ff; color: #fff; }

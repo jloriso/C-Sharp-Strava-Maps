@@ -10,17 +10,40 @@ the app navigation once and displays one content page at a time.
 - **Weekly Mileage** shows separate, vertically stacked Run, Bike, and Other charts.
   Each chart has its own date slider and Start, Older, Newer, and Latest buttons.
   The chart window shows up to 26 weeks; Older/Newer move it by 12 weeks.
-- **Maps** shows one map at a time. Its in-map toggle switches between Heatmap and
-  Line Map while retaining the timeline position, map center, and zoom.
-- **Heatmap** displays activity points by category. Dated activities are revealed
-  chronologically; undated activities remain as a baseline. Start/Older sit to the
+- **Maps** shows one map at a time, opening on the Line Map. Its Line Map / Heatmap
+  toggle is the only way to reach the two maps (they are not in the top navigation);
+  switching retains the timeline date, activity type selection, map center, and zoom.
+  The current map stays visible until the other has loaded and rendered; both stay
+  loaded afterwards, so switching back is immediate. On first load a spinning globe
+  is shown until the map has rendered, then the map and toggle appear together.
+- **Heatmap** displays activity points by category. It opens at Latest with every
+  activity shown; the timeline steps back through dated activities chronologically,
+  and undated activities remain as a baseline. Start/Older sit to the
   left of the slider and Newer/Latest to the right.
-- **Line Map** shows route activity in the current viewport. Its chronological
-  timeline uses the same controls. Panning or zooming recalculates which revealed
-  routes intersect the viewport.
+- **Line Map** shows route activity in the current viewport, also opening at Latest
+  with all routes drawn. Its chronological timeline uses the same controls. Panning
+  or zooming recalculates which revealed routes intersect the viewport. Clicking a
+  route opens a popup with its type and date; its **View activity details** link
+  opens a larger dialog with that activity's full Activities-page card (description,
+  stats, shoes, and a route map with playback). Esc, the × button, or clicking
+  outside the dialog closes it.
+- **Activities** is a feed of every activity with a route, newest first, grouped
+  under month headings. Each card shows the activity description, the route on its
+  own line map (a green start dot and a checkered finish dot), the distance, the time
+  (the CSV's Moving Time, falling back to Elapsed Time), the pace (runs, walks, and
+  hikes) or speed (everything else), and the shoes or other gear used. Shoes come
+  from the Activity Gear column, matched to `shoes.csv` in the same folder as the
+  activities CSV to show the shoe's name, brand, and model. The play button in each
+  map's bottom-left corner draws the route out from start to finish (pause and replay
+  as needed).
+  Scrolling down keeps loading older activities until the very first one. The
+  activities are fetched 20 at a time from `activity-feed/page-N.json`, and each card's map
+  only exists while it is near the screen. Each activity is also served on its own at
+  `activity-feed/activities/{id}.json` for the Line Map's details dialog.
 
 Both maps include category visibility checkboxes, a Home button, and a Jump to
-control for these preset views:
+control for these preset views (a view is highlighted only while the map is still
+showing it):
 
 | Location | Latitude | Longitude | Zoom |
 |---|---:|---:|---:|
@@ -32,6 +55,9 @@ control for these preset views:
 ### Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) or later.
+- [Node.js](https://nodejs.org) 20 or later (with npm). Building `Web.App` runs
+  `npm ci` (first build only) and `npm run build` automatically to compile the
+  TypeScript pages.
 - Internet access in the browser to load Leaflet, Chart.js, and map tiles from
   public CDNs.
 
@@ -107,18 +133,41 @@ Api.Models/                                 # activity metadata, tracks, parsed 
 Api.Shared/                                 # activity IDs, categories, distance, locations
 Web.Rendering/                              # HTML template loader and map rendering helpers
 Web.Server/                                 # local HTTP server and browser launch
-Web.Index/index.html                        # root shell with one app navigation
-Web.Features/Controls/                      # injected navigation and Leaflet controls
-Web.Features/Controls/Templates/            # control JavaScript templates
-Web.Features/Charts/WeeklyMileage/          # mileage aggregation, chart builder, template
-Web.Features/Maps/Heatmap/                  # chronological heatmap data and page
-Web.Features/Maps/Linemap/                  # chronological route data and page
-Web.Features/Maps/MapSwitcher/              # map toggle wrapper page
+Web.App/package.json, tsconfig.json         # frontend (TypeScript + Vite) build
+Web.App/vite.config.ts                      # shared Vite config (single-file HTML output)
+Web.App/scripts/build-pages.mjs             # builds each page into Web.App/dist/
+Web.App/Index/                              # root shell page with one app navigation
+Web.App/Features/Shared/                    # shared TS types, page-data reader, iframe messages
+Web.App/Features/Controls/<Name>/           # one folder per control (<Name>Control.ts + .css)
+Web.App/Features/Charts/WeeklyMileage/      # mileage aggregation, chart builder, page
+Web.App/Features/Maps/Shared/               # base map setup and shared map settings
+Web.App/Features/Maps/Heatmap/              # chronological heatmap data and page
+Web.App/Features/Maps/Linemap/              # chronological route data and page
+Web.App/Features/Maps/MapSwitcher/          # map toggle wrapper page
+Web.App/Features/Activities/ActivityFeed/   # paged per-activity feed data and page
+Web.App/Features/Activities/Shared/         # activity card + route map shared by the feed and details dialog
 ```
 
-The controls under `Web.Features/Controls` own their markup and JavaScript templates;
-page builders inject them where needed. The index shell injects app navigation once,
-instead of duplicating it on every content page.
+Each page is an `.html` + `.ts` (+ `.css`) next to its C# `*HtmlBuilder`. The C#
+builder only serializes data into the page's
+`<script id="page-data" type="application/json">{{PAGE_DATA_JSON}}</script>` block
+(via `PageDataBuilder`); all markup and behavior live in TypeScript. Controls are
+typed modules that pages import, e.g. `addBookmarkControl(map, locations, ...)`.
+
+### Frontend development
+
+Building `Web.App` (or the solution) compiles the frontend automatically. To work on
+the TypeScript directly, run these from `Web.App/`:
+
+```sh
+npm install          # first time only
+npm run typecheck    # tsc --noEmit
+npm run build        # type check + build every page into dist/
+```
+
+To add a page, create its `.html`/`.ts` and add it to the `pages` list in
+`scripts/build-pages.mjs`. Pass `-p:SkipClientBuild=true` to `dotnet build` to skip
+the npm step.
 
 ### Tuning
 
@@ -126,4 +175,6 @@ instead of duplicating it on every content page.
 - Change heatmap rounding and weight clipping in `HeatmapDataBuilder.Build(...)`.
 - Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
 - Change the mileage chart window and navigation step in
-  `Web.Features/Charts/WeeklyMileage/weeklymileage.html`.
+  `Web.App/Features/Charts/WeeklyMileage/weeklymileage.ts`.
+- Change the activity feed page size and route simplification tolerance in
+  `ActivityFeedDataBuilder.cs`.

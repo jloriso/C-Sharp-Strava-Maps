@@ -6,6 +6,7 @@ using GpxWorldMap.Models;
 using GpxWorldMap.Rendering;
 using GpxWorldMap.Server;
 using GpxWorldMap.Shared;
+using GpxWorldMap.Web.Features.Activities.ActivityFeed;
 using GpxWorldMap.Web.Features.Charts.WeeklyMileage;
 using GpxWorldMap.Web.Features.Maps.Heatmap;
 using GpxWorldMap.Web.Features.Maps.Linemap;
@@ -18,8 +19,9 @@ namespace GpxWorldMap
     /// Reads every *.gpx.gz, *.tcx.gz, and *.fit.gz file in a folder, decompresses it,
     /// extracts tracks/routes/waypoints, optionally joins each one against a Strava-style
     /// activities CSV (matched by the numeric ID in the CSV's Filename column, falling
-    /// back to Activity ID), and produces three pages, all served locally and linked
-    /// via a shared nav bar:
+    /// back to Activity ID), and produces four pages, all served locally. A shared nav
+    /// bar links Weekly Mileage, Maps, and Activities; the two maps are reached only
+    /// through the Maps page's Line Map / Heatmap toggle:
     ///
     ///   - a Strava-style weekly mileage chart, filterable by Run/Bike/Other and
     ///     scrollable back through the full history (WeeklyMileageDataBuilder /
@@ -28,7 +30,10 @@ namespace GpxWorldMap
     ///     HeatmapHtmlBuilder), and
     ///   - a line map of every route, colored by category (Run/Bike/Other) and
     ///     weighted/opacity-scaled by how many times that stretch of road/trail has been travelled
-    ///     (RouteFrequencyMapBuilder / LineMapHtmlBuilder).
+    ///     (RouteFrequencyMapBuilder / LineMapHtmlBuilder), and
+    ///   - an Activities feed: one card per activity (route line map, distance, time,
+    ///     and pace/speed), newest first, fetching older activities as JSON pages while
+    ///     scrolling (ActivityFeedDataBuilder / ActivityFeedHtmlBuilder).
     ///
     /// Usage:
     ///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [weekly-mileage-output.html] [--config path.json]
@@ -84,7 +89,12 @@ namespace GpxWorldMap
                     var track = new ActivityTrack
                     {
                         ActivityId = id,
+                        Name = meta.Name,
                         Type = meta.Type,
+                        Description = meta.Description,
+                        Gear = meta.Gear,
+                        ElapsedSeconds = meta.ElapsedSeconds,
+                        MovingSeconds = meta.MovingSeconds,
                         Color = meta.Color,
                         ActivityDate = ParseActivityDate(meta.Date)
                     };
@@ -144,6 +154,7 @@ namespace GpxWorldMap
             string lineMapHref = Path.GetFileName(config.OutputLineMapHtml);
             string weeklyMileageHref = Path.GetFileName(config.OutputWeeklyMileageHtml);
             const string mapsHref = "maps.html";
+            const string activitiesHref = "activities.html";
 
             Console.WriteLine("\nBuilding heatmap...");
             var heat = HeatmapDataBuilder.Build(tracks);
@@ -154,8 +165,8 @@ namespace GpxWorldMap
             var lineData = LineMapDataBuilder.Build(tracks);
             var linemapHtml = LineMapHtmlBuilder.BuildHtml(
                 lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs,
-                categoryColors, locations, config.CartoApiKey);
-        
+                categoryColors, locations, config.CartoApiKey, ActivityFeedDataBuilder.ActivityUrlTemplate);
+
             Console.WriteLine("Building weekly mileage chart...");
             var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
             if (weeklyMileage.SkippedForMissingDate > 0)
@@ -165,25 +176,36 @@ namespace GpxWorldMap
                 weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors);
             string mapsHtml = MapSwitcherHtmlBuilder.BuildHtml(
                 heatmapHref, lineMapHref);
+
+            Console.WriteLine("Building activity feed...");
+            var feed = ActivityFeedDataBuilder.Build(tracks, LoadShoes(config.CsvFile));
+            var feedPageUrls = feed.PagesJson.Select((_, i) => $"activity-feed/page-{i}.json").ToList();
+            string activitiesHtml = ActivityFeedHtmlBuilder.BuildHtml(feed.TotalActivities, feedPageUrls, config.CartoApiKey);
             string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
             {
                 ("weeklymileage", "Weekly Mileage", weeklyMileageHref),
                 ("maps", "Maps", mapsHref),
-                ("heatmap", "Heatmap", heatmapHref),
-                ("linemap", "Line Map", lineMapHref)
+                ("activities", "Activities", activitiesHref)
             }, "weeklymileage");
 
             WriteFile(config.OutputHeatmapHtml, heatmapHtml);
             WriteFile(config.OutputLineMapHtml, linemapHtml);
             WriteFile(config.OutputWeeklyMileageHtml, weeklyMileageHtml);
 
-            LocalWebServer.Serve(indexHtml, new Dictionary<string, string>
+            var servedFiles = new Dictionary<string, string>
             {
                 [weeklyMileageHref] = weeklyMileageHtml,
                 [heatmapHref] = heatmapHtml,
                 [lineMapHref] = linemapHtml,
                 [mapsHref] = mapsHtml,
-            });
+                [activitiesHref] = activitiesHtml,
+            };
+            for (int i = 0; i < feedPageUrls.Count; i++)
+                servedFiles[feedPageUrls[i]] = feed.PagesJson[i];
+            foreach (var (activityId, json) in feed.ActivityJsonById)
+                servedFiles[ActivityFeedDataBuilder.ActivityUrl(activityId)] = json;
+
+            LocalWebServer.Serve(indexHtml, servedFiles);
             return 0;
         }
 
@@ -243,6 +265,19 @@ namespace GpxWorldMap
             return (byFilenameId, byActivityId);
         }
 
+        /// <summary>Reads shoes.csv from the activities CSV's folder (where Strava's
+        /// export puts it), so the activity feed can show shoe details. Optional.</summary>
+        private static List<ShoeRecord> LoadShoes(string? csvFile)
+        {
+            if (csvFile == null) return new();
+            string path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(csvFile)) ?? "", "shoes.csv");
+            if (!File.Exists(path)) return new();
+
+            var shoes = CsvReader.ParseShoesCsv(path);
+            Console.WriteLine($"Loaded {shoes.Count} shoe(s) from {path}");
+            return shoes;
+        }
+
         private static ActivityMeta ResolveMeta(
             string id,
             Dictionary<string, ActivityRecord> byFilenameId,
@@ -257,6 +292,9 @@ namespace GpxWorldMap
                 meta.Type = string.IsNullOrWhiteSpace(record.Type) ? "Unknown" : record.Type;
                 meta.Date = record.Date;
                 meta.Description = record.Description;
+                meta.ElapsedSeconds = ParseSeconds(record.ElapsedTime);
+                meta.MovingSeconds = ParseSeconds(record.MovingTime);
+                meta.Gear = record.Gear;
             }
 
             meta.Color = ActivityColors.ColorForType(meta.Type);
@@ -277,6 +315,9 @@ namespace GpxWorldMap
             if (DateTime.TryParse(date, CultureInfo.CurrentCulture, DateTimeStyles.None, out var d2)) return d2;
             return null;
         }
+
+        private static double? ParseSeconds(string value) =>
+            double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var s) && s > 0 ? s : null;
 
         private static void PrintMatchSummary(
             Dictionary<string, ActivityRecord> byFilenameId,

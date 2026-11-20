@@ -4,124 +4,12 @@
     <meta charset="utf-8" />
     <title>Activity Heatmap</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
-        #map { flex: 1 1 auto; }
-        #timeline-controls {
-            display: grid; grid-template-columns: auto auto minmax(100px, 1fr) auto auto auto auto; align-items: center;
-            gap: 8px; padding: 8px 12px; background: #fff; border-top: 1px solid #d5d9dc;
-            color: #24292d; font: 13px sans-serif; flex: 0 0 auto;
-        }
-        #timeline-controls[hidden] { display: none; }
-        .timeline-button {
-            min-width: 64px; height: 30px; padding: 0 10px; border: 1px solid #aeb6bc;
-            border-radius: 4px; background: #f7f8f8; color: inherit; font: inherit; cursor: pointer;
-        }
-        .timeline-button:hover { background: #edf0f1; }
-        .timeline-button:disabled { opacity: 0.4; cursor: default; }
-        #timeline-slider { width: 100%; min-width: 0; accent-color: #16836d; }
-        #timeline-date { min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
-        .map-type-buttons { display: flex; gap: 4px; }
-        .map-type-btn { height: 30px; padding: 0 9px; border: 1px solid #ccc; border-radius: 3px; background: #f7f7f7; color: #24292d; font: 13px sans-serif; cursor: pointer; white-space: nowrap; }
-        .map-type-btn.active { background: #3388ff; border-color: #3388ff; color: #fff; }
-        .map-type-btn:hover:not(.active) { background: #ececec; }
-        .leaflet-top.leaflet-left .map-type-control { clear: none; margin-top: 10px; margin-left: 4px; }
-        @media (max-width: 480px) {
-            #timeline-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; }
-            #timeline-start { grid-column: 1; grid-row: 1; }
-            #timeline-older { grid-column: 2; grid-row: 1; }
-            #timeline-slider { grid-column: 1 / -1; grid-row: 2; }
-            #timeline-newer { grid-column: 3; grid-row: 1; }
-            #timeline-latest { grid-column: 4; grid-row: 1; }
-            #timeline-date { grid-column: 1 / 4; text-align: left; min-width: 0; }
-            #timeline-year { grid-column: 4; text-align: right; }
-        }
-        .legend { background: white; padding: 8px 12px; font: 13px sans-serif; line-height: 1.6; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-        .legend .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; }
-        .bookmark-buttons { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-        .bookmark-btn {
-            font: 13px sans-serif; padding: 4px 10px; border: 1px solid #ccc; border-radius: 4px;
-            background: #f7f7f7; cursor: pointer; text-align: left;
-        }
-        .bookmark-btn:hover { background: #ececec; }
-        .bookmark-btn.active { background: #3388ff; border-color: #3388ff; color: white; }
-        .home-control .home-btn {
-            font: 16px sans-serif;
-            line-height: 1;
-            width: 34px;
-            height: 30px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background: #f7f7f7;
-            cursor: pointer;
-            padding: 0;
-        }
-        .home-control .home-btn:hover { background: #ececec; }
-    </style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 </head>
 <body>
 <div id="map"></div>
-<div id="timeline-controls" hidden>
-    <button id="timeline-start" class="timeline-button" type="button">Start</button>
-    <button id="timeline-older" class="timeline-button" type="button">Older</button>
-    <input type="range" id="timeline-slider" min="0" max="0" value="0" step="1" aria-label="Activities shown over time" />
-    <button id="timeline-newer" class="timeline-button" type="button">Newer</button>
-    <button id="timeline-latest" class="timeline-button" type="button">Latest</button>
-    <output id="timeline-date" for="timeline-slider"></output>
-    <output id="timeline-year" for="timeline-slider"></output>
-</div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-<script>
-    var undatedPointsByType = {{UNDATED_POINTS_BY_TYPE_JS}};
-    var timelineActivities = {{TIMELINE_ACTIVITIES_JS}};
-    var map = L.map('map', { zoomControl: false }).setView({{INITIAL_VIEW_JS}});
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png{{CARTO_API_QUERY}}', {
-        maxZoom: 19, subdomains: 'abcd', detectRetina: true,
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-    }).addTo(map);
-
-    var heatOptions = {
-        radius: 8, blur: 10, maxZoom: 15, minOpacity: 0.3,
-        gradient: { 0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 0.85: 'red' }
-    };
-
-    var heatLayersByType = {};
-    var allTypes = new Set(Object.keys(undatedPointsByType));
-    timelineActivities.forEach(function (activity) { allTypes.add(activity.type); });
-    allTypes.forEach(function (type) {
-        heatLayersByType[type] = L.heatLayer([], heatOptions).addTo(map);
-    });
-
-    function renderTimeline(activityCount) {
-        var pointsByType = {};
-        Object.keys(undatedPointsByType).forEach(function (type) {
-            pointsByType[type] = undatedPointsByType[type].slice();
-        });
-        for (var i = 0; i < activityCount; i++) {
-            var activity = timelineActivities[i];
-            if (!pointsByType[activity.type]) pointsByType[activity.type] = [];
-            pointsByType[activity.type].push.apply(pointsByType[activity.type], activity.points);
-        }
-        Object.keys(heatLayersByType).forEach(function (type) {
-            heatLayersByType[type].setLatLngs(pointsByType[type] || []);
-        });
-    }
-
-    window.onActivityTypeToggle = function (type, checked) {
-        var layer = heatLayersByType[type];
-        if (!layer) return;
-        if (checked) map.addLayer(layer); else map.removeLayer(layer);
-    };
-
-    {{BOOKMARK_CONTROL_SCRIPT}}
-    {{ACTIVITY_TYPE_CONTROL_SCRIPT}}
-    {{HOME_CONTROL_SCRIPT}}
-    window.onTimelineChange = renderTimeline;
-    {{MAP_TYPE_CONTROL_SCRIPT}}
-    {{TIMELINE_CONTROL_SCRIPT}}
-</script>
+<script id="page-data" type="application/json">{{PAGE_DATA_JSON}}</script>
+<script type="module" src="./heatmap.ts"></script>
 </body>
 </html>

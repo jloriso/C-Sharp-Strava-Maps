@@ -1,0 +1,16 @@
+html, body { width: 100%; height: 100%; margin: 0; display: flex; flex-direction: column; font: 14px sans-serif; }
+#map-stage { position: relative; min-height: 0; flex: 1 1 auto; }
+.map-frame { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border: 0; z-index: 1; }
+/* Kept laid out (not display: none) so Leaflet can size the map and load tiles while hidden. */
+.map-frame.is-hidden { visibility: hidden; z-index: 0; pointer-events: none; }
+/* Loading screen: hide the map and toggle until the first map has rendered, so they appear together. */
+body.is-loading #map-stage { visibility: hidden; }
+#page-loader {
+    position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; background: #f6f7f8; color: #55606a; font: 14px sans-serif;
+}
+.globe-spinner { animation: globe-tilt 2.4s ease-in-out infinite; }
+.globe-sea { fill: #e3f0fb; }
+.globe-lines { fill: none; stroke: #3388ff; stroke-width: 1.6; }
+@keyframes globe-tilt { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(-8deg); } }
+@media (prefers-reduced-motion: reduce) { .globe-spinner { animation: none; } }

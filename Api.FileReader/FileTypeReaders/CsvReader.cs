@@ -20,6 +20,11 @@ namespace GpxWorldMap.FileInterpreter.FileTypeReaders
             int idxType = FindColumn(header, "Activity Type");
             int idxDesc = FindColumn(header, "Activity Description");
             int idxFilename = FindColumn(header, "Filename");
+            // Strava exports have two "Elapsed Time" columns; both are in seconds, and
+            // FindColumn takes the first.
+            int idxElapsed = FindColumn(header, "Elapsed Time");
+            int idxMoving = FindColumn(header, "Moving Time");
+            int idxGear = FindColumn(header, "Activity Gear");
 
             if (idxId < 0)
                 Console.WriteLine("Warning: couldn't find an 'Activity ID' column in the CSV header.");
@@ -37,7 +42,32 @@ namespace GpxWorldMap.FileInterpreter.FileTypeReaders
                     Get(idxName).Trim(),
                     Get(idxType).Trim(),
                     Get(idxDesc).Trim(),
-                    Get(idxFilename).Trim()));
+                    Get(idxFilename).Trim(),
+                    Get(idxElapsed).Trim(),
+                    Get(idxMoving).Trim(),
+                    Get(idxGear).Trim()));
+            }
+            return result;
+        }
+
+        /// <summary>Reads the Strava export's shoes.csv (Shoe Name, Shoe Brand, Shoe Model, ...).</summary>
+        public static List<ShoeRecord> ParseShoesCsv(string path)
+        {
+            var rows = ReadCsvRows(path);
+            if (rows.Count == 0) return new();
+
+            var header = rows[0].Select(h => h.Trim()).ToList();
+            int idxName = FindColumn(header, "Shoe Name");
+            int idxBrand = FindColumn(header, "Shoe Brand");
+            int idxModel = FindColumn(header, "Shoe Model");
+
+            var result = new List<ShoeRecord>();
+            for (int i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Get(int idx) => idx >= 0 && idx < row.Count ? row[idx].Trim() : "";
+                if (Get(idxName).Length > 0 || Get(idxModel).Length > 0)
+                    result.Add(new ShoeRecord(Get(idxName), Get(idxBrand), Get(idxModel)));
             }
             return result;
         }

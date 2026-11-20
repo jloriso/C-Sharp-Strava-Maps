@@ -17,8 +17,50 @@
     <ProjectReference Include="..\Web.Server\Web.Server.csproj" />
   </ItemGroup>
 
+  <!--
+    Client-side pages (TypeScript + Vite). Sources live next to each feature
+    (Index/, Features/**); `npm run build` type-checks them and emits one
+    self-contained HTML file per page into dist/, which is copied to the output
+    directory and loaded at runtime by HtmlTemplateLoader.
+    Set -p:SkipClientBuild=true to skip the npm build (e.g. when dist/ is already current).
+  -->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);node_modules/**;dist/**</DefaultItemExcludes>
+    <ClientBuildStamp>dist/.build-stamp</ClientBuildStamp>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Content Include="Index/*.html;Features/**/*.html;Features/**/*.js" CopyToOutputDirectory="PreserveNewest" />
+    <ClientSource Include="package.json;package-lock.json;tsconfig.json;vite.config.ts;scripts/**" />
+    <ClientSource Include="Index/**/*.html;Index/**/*.ts;Index/**/*.css" />
+    <ClientSource Include="Features/**/*.html;Features/**/*.ts;Features/**/*.css" />
   </ItemGroup>
+
+  <Target Name="ClientNpmInstall"
+          BeforeTargets="ClientBuild"
+          Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true' And !Exists('node_modules/.package-lock.json')">
+    <Exec Command="node --version" ContinueOnError="true" StandardOutputImportance="low">
+      <Output TaskParameter="ExitCode" PropertyName="NodeExitCode" />
+    </Exec>
+    <Error Condition="'$(NodeExitCode)' != '0'" Text="Node.js is required to build the web pages. Install it from https://nodejs.org and rebuild." />
+    <Exec Command="npm ci" />
+  </Target>
+
+  <Target Name="ClientBuild"
+          BeforeTargets="AssignTargetPaths"
+          Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'"
+          Inputs="@(ClientSource)"
+          Outputs="$(ClientBuildStamp)">
+    <Exec Command="npm run build" />
+    <Touch Files="$(ClientBuildStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="IncludeClientOutput" AfterTargets="ClientBuild" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <_ClientOutput Include="dist/**/*.html" />
+      <Content Include="@(_ClientOutput)"
+               TargetPath="%(_ClientOutput.RecursiveDir)%(_ClientOutput.Filename)%(_ClientOutput.Extension)"
+               CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 
 </Project>

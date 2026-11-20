@@ -1,0 +1,8 @@
+.route-player-button {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0; border: 2px solid rgba(0,0,0,0.2); border-radius: 50%;
+    background: white; color: #242428; cursor: pointer; background-clip: padding-box;
+}
+.route-player-button:hover { background-color: #f4f4f4; color: #fc4c02; }
+.route-player-button:focus-visible { outline: 2px solid #3388ff; outline-offset: 2px; }
+.route-player-button svg { width: 14px; height: 14px; fill: currentColor; }
