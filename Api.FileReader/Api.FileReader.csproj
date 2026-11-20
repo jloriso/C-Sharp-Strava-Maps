@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Api.Models\Api.Models.csproj" />
+    <ProjectReference Include="..\Api.Shared\Api.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

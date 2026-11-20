@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RollForward>LatestMajor</RollForward>
+    <AssemblyName>GpxWorldMap</AssemblyName>
+    <RootNamespace>GpxWorldMap</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Api.Config\Api.Config.csproj" />
+    <ProjectReference Include="..\Api.FileReader\Api.FileReader.csproj" />
+    <ProjectReference Include="..\Api.Models\Api.Models.csproj" />
+    <ProjectReference Include="..\Api.Shared\Api.Shared.csproj" />
+    <ProjectReference Include="..\Web.Rendering\Web.Rendering.csproj" />
+    <ProjectReference Include="..\Web.Server\Web.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Index/*.html;Features/**/*.html;Features/**/*.js" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
