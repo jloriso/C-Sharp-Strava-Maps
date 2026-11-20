@@ -209,10 +209,14 @@ function routeMarker(point: L.LatLngTuple, kind: 'start' | 'finish'): L.Marker {
   }).bindTooltip(kind === 'start' ? 'Start' : 'Finish', { direction: 'top', offset: [0, -size / 2] });
 }
 
-/** Scales playback with distance so short and long routes both play at a watchable speed. */
+/**
+ * Playback length: linear up to 5 mi (4–5 s), so short routes stay watchable, then
+ * logarithmic (+1.5 s per doubling of distance, capped at 8 s), so long ones don't drag.
+ */
 function playbackDuration(activity: FeedActivity): number {
   const miles = activity.distanceMeters / metersPerMile;
-  return Math.min(15000, Math.max(4000, 3000 + miles * 400));
+  if (miles <= 5) return Math.max(4000, 3000 + miles * 400);
+  return Math.min(8000, 5000 + 1500 * Math.log2(miles / 5));
 }
 
 function showMap(element: Element): void {
