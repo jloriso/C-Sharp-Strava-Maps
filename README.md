@@ -24,9 +24,14 @@ the app navigation once and displays one content page at a time.
   with all routes drawn. Its chronological timeline uses the same controls. Panning
   or zooming recalculates which revealed routes intersect the viewport.
 - **Activities** is a feed of every activity with a route, newest first, grouped
-  under month headings. Each card shows the route on its own line map (with start
-  and finish markers), the distance, the time (the CSV's Moving Time, falling back
-  to Elapsed Time), and the pace (runs, walks, and hikes) or speed (everything else).
+  under month headings. Each card shows the activity description, the route on its
+  own line map (a green start dot and a checkered finish dot), the distance, the time
+  (the CSV's Moving Time, falling back to Elapsed Time), the pace (runs, walks, and
+  hikes) or speed (everything else), and the shoes or other gear used. Shoes come
+  from the Activity Gear column, matched to `shoes.csv` in the same folder as the
+  activities CSV to show the shoe's name, brand, and model. The play button in each
+  map's bottom-left corner draws the route out from start to finish (pause and replay
+  as needed).
   Scrolling down keeps loading older activities until the very first one. The
   activities are fetched 20 at a time from `activity-feed/page-N.json`, and each card's map
   only exists while it is near the screen.

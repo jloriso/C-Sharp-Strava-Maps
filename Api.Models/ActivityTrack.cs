@@ -9,6 +9,10 @@ namespace GpxWorldMap.Models
         public string ActivityId = "";
         public string Name = "";
         public string Type = "";
+        public string Description = "";
+
+        /// <summary>The CSV's Activity Gear value ("" when none).</summary>
+        public string Gear = "";
         public string Color = "#3388ff";
         public List<List<(double Lat, double Lon)>> Segments = new();
 

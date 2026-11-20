@@ -30,6 +30,21 @@ html, body { margin: 0; font: 14px sans-serif; background: #fafafa; color: #2424
 
 .activity-map { height: 280px; border-radius: 4px; background: #e8eaed; }
 
+.activity-description { margin: 10px 0 0; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.4; }
+.activity-gear { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: -4px 0 12px; font-size: 13px; }
+.gear-label { color: #666; font-size: 12px; }
+.gear-name { font-weight: 600; }
+.gear-detail { color: #666; }
+.gear-detail::before { content: "· "; }
+
+/* Start: green dot with a white ring. Finish: checkered flag dot. */
+.route-marker { box-sizing: border-box; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.45); }
+.route-start { background: #2e9e44; border: 3px solid white; }
+.route-finish {
+    border: 2px solid #242428;
+    background: repeating-conic-gradient(#242428 0 25%, white 0 50%) 0 0 / 5px 5px;
+}
+
 #feed-status { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 16px; color: #666; }
 #feed-status:empty { display: none; }
 #feed-sentinel { height: 1px; }

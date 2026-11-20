@@ -32,8 +32,11 @@ namespace GpxWorldMap.Web.Features.Activities.ActivityFeed
             public List<string> PagesJson = new();
         }
 
-        public static Result Build(IEnumerable<ActivityTrack> tracks)
+        public static Result Build(IEnumerable<ActivityTrack> tracks, IEnumerable<ShoeRecord> shoes)
         {
+            var shoesByGear = new Dictionary<string, ShoeRecord>(StringComparer.OrdinalIgnoreCase);
+            foreach (var shoe in shoes) shoesByGear.TryAdd(shoe.GearLabel, shoe);
+
             var ordered = tracks
                 .Where(t => t.Segments.Count > 0)
                 .OrderBy(t => t.ActivityDate.HasValue ? 0 : 1)
@@ -46,21 +49,31 @@ namespace GpxWorldMap.Web.Features.Activities.ActivityFeed
             {
                 var page = new
                 {
-                    Activities = ordered.Skip(start).Take(PageSize).Select(ToFeedActivity).ToList()
+                    Activities = ordered.Skip(start).Take(PageSize).Select(t => ToFeedActivity(t, shoesByGear)).ToList()
                 };
                 result.PagesJson.Add(JsonSerializer.Serialize(page, SerializerOptions));
             }
             return result;
         }
 
-        private static object ToFeedActivity(ActivityTrack track)
+        private static object ToFeedActivity(ActivityTrack track, Dictionary<string, ShoeRecord> shoesByGear)
         {
+            object? gear = null;
+            if (!string.IsNullOrWhiteSpace(track.Gear))
+            {
+                gear = shoesByGear.TryGetValue(ShoeRecord.NormalizeLabel(track.Gear), out var shoe)
+                    ? new { Kind = "shoe", Name = shoe.Name.Length > 0 ? shoe.Name : shoe.Model, Detail = ShoeRecord.NormalizeLabel($"{shoe.Brand} {shoe.Model}") }
+                    : new { Kind = "gear", Name = track.Gear.Trim(), Detail = "" };
+            }
+
             string category = ActivityCategory.CategoryForType(track.Type);
             return new
             {
                 Id = track.ActivityId,
                 Name = string.IsNullOrWhiteSpace(track.Name) ? track.ActivityId : track.Name,
                 track.Type,
+                Description = string.IsNullOrWhiteSpace(track.Description) ? null : track.Description.Trim(),
+                Gear = gear,
                 Category = category,
                 Color = ActivityCategory.ColorForCategory(category),
                 Date = track.ActivityDate?.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),

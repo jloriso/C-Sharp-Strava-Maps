@@ -91,6 +91,8 @@ namespace GpxWorldMap
                         ActivityId = id,
                         Name = meta.Name,
                         Type = meta.Type,
+                        Description = meta.Description,
+                        Gear = meta.Gear,
                         ElapsedSeconds = meta.ElapsedSeconds,
                         MovingSeconds = meta.MovingSeconds,
                         Color = meta.Color,
@@ -176,7 +178,7 @@ namespace GpxWorldMap
                 heatmapHref, lineMapHref);
 
             Console.WriteLine("Building activity feed...");
-            var feed = ActivityFeedDataBuilder.Build(tracks);
+            var feed = ActivityFeedDataBuilder.Build(tracks, LoadShoes(config.CsvFile));
             var feedPageUrls = feed.PagesJson.Select((_, i) => $"activity-feed/page-{i}.json").ToList();
             string activitiesHtml = ActivityFeedHtmlBuilder.BuildHtml(feed.TotalActivities, feedPageUrls, config.CartoApiKey);
             string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
@@ -261,6 +263,19 @@ namespace GpxWorldMap
             return (byFilenameId, byActivityId);
         }
 
+        /// <summary>Reads shoes.csv from the activities CSV's folder (where Strava's
+        /// export puts it), so the activity feed can show shoe details. Optional.</summary>
+        private static List<ShoeRecord> LoadShoes(string? csvFile)
+        {
+            if (csvFile == null) return new();
+            string path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(csvFile)) ?? "", "shoes.csv");
+            if (!File.Exists(path)) return new();
+
+            var shoes = CsvReader.ParseShoesCsv(path);
+            Console.WriteLine($"Loaded {shoes.Count} shoe(s) from {path}");
+            return shoes;
+        }
+
         private static ActivityMeta ResolveMeta(
             string id,
             Dictionary<string, ActivityRecord> byFilenameId,
@@ -277,6 +292,7 @@ namespace GpxWorldMap
                 meta.Description = record.Description;
                 meta.ElapsedSeconds = ParseSeconds(record.ElapsedTime);
                 meta.MovingSeconds = ParseSeconds(record.MovingTime);
+                meta.Gear = record.Gear;
             }
 
             meta.Color = ActivityColors.ColorForType(meta.Type);

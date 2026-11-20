@@ -1,4 +1,5 @@
 import './activities.css';
+import { addRoutePlayerControl, type RoutePlayer } from '../../Controls/RoutePlayer/RoutePlayerControl';
 import { addBaseTiles } from '../../Maps/Shared/baseMap';
 import { readPageData } from '../../Shared/pageData';
 import { getElement } from '../../Shared/types';
@@ -16,6 +17,9 @@ interface FeedActivity {
   id: string;
   name: string;
   type: string;
+  description: string | null;
+  /** Shoes are matched against shoes.csv; other gear is shown as named in the CSV. */
+  gear: { kind: 'shoe' | 'gear'; name: string; detail: string } | null;
   category: string;
   color: string;
   /** Local date-time ("2024-05-01T07:30:00"), or null when the activity has no date. */
@@ -52,7 +56,7 @@ let lastMonth: string | null | undefined;
 // Card maps are only created near the viewport and removed once far away, so scrolling
 // through hundreds of activities doesn't keep hundreds of Leaflet maps alive.
 const cardActivities = new Map<Element, FeedActivity>();
-const cardMaps = new Map<Element, L.Map>();
+const cardMaps = new Map<Element, { map: L.Map; player: RoutePlayer }>();
 const mapObserver = new IntersectionObserver(entries => {
   for (const entry of entries) {
     if (entry.isIntersecting) showMap(entry.target);
@@ -151,7 +155,16 @@ function appendCard(activity: FeedActivity): void {
   mapElement.setAttribute('role', 'img');
   mapElement.setAttribute('aria-label', `Route map of ${activity.name}`);
 
-  card.append(header, stats, mapElement);
+  card.append(header);
+  if (activity.description) {
+    const description = document.createElement('p');
+    description.className = 'activity-description';
+    description.textContent = activity.description;
+    card.append(description);
+  }
+  card.append(stats);
+  if (activity.gear) card.append(gearLine(activity.gear));
+  card.append(mapElement);
   feed.append(card);
   cardActivities.set(mapElement, activity);
   mapObserver.observe(mapElement);
@@ -165,6 +178,41 @@ function stat(label: string, value: string): HTMLElement {
   dd.textContent = value;
   wrapper.append(dt, dd);
   return wrapper;
+}
+
+function gearLine(gear: NonNullable<FeedActivity['gear']>): HTMLElement {
+  const line = document.createElement('div');
+  line.className = 'activity-gear';
+  const label = document.createElement('span');
+  label.className = 'gear-label';
+  label.textContent = gear.kind === 'shoe' ? 'Shoes' : 'Gear';
+  const name = document.createElement('span');
+  name.className = 'gear-name';
+  name.textContent = gear.name;
+  line.append(label, name);
+  if (gear.detail) {
+    const detail = document.createElement('span');
+    detail.className = 'gear-detail';
+    detail.textContent = gear.detail;
+    line.append(detail);
+  }
+  return line;
+}
+
+function routeMarker(point: L.LatLngTuple, kind: 'start' | 'finish'): L.Marker {
+  const size = kind === 'start' ? 18 : 14;
+  return L.marker(point, {
+    icon: L.divIcon({ className: `route-marker route-${kind}`, iconSize: [size, size] }),
+    // The finish sits on top so loops still show it inside the (larger) start ring.
+    zIndexOffset: kind === 'finish' ? 1000 : 0,
+    keyboard: false,
+  }).bindTooltip(kind === 'start' ? 'Start' : 'Finish', { direction: 'top', offset: [0, -size / 2] });
+}
+
+/** Scales playback with distance so short and long routes both play at a watchable speed. */
+function playbackDuration(activity: FeedActivity): number {
+  const miles = activity.distanceMeters / metersPerMile;
+  return Math.min(15000, Math.max(4000, 3000 + miles * 400));
 }
 
 function showMap(element: Element): void {
@@ -181,31 +229,33 @@ function showMap(element: Element): void {
   addBaseTiles(map, data.tileUrlQuery);
 
   const bounds = L.latLngBounds([]);
-  let first: L.LatLngTuple | undefined;
-  let last: L.LatLngTuple | undefined;
+  const segments: L.LatLngTuple[][] = [];
+  const routeLayers: L.Polyline[] = [];
   for (const flat of activity.segments) {
     const latLngs: L.LatLngTuple[] = [];
     for (let i = 0; i + 1 < flat.length; i += 2) latLngs.push([flat[i], flat[i + 1]]);
     if (latLngs.length === 0) continue;
-    L.polyline(latLngs, { color: activity.color, weight: 3, opacity: 0.9 }).addTo(map);
+    segments.push(latLngs);
+    routeLayers.push(L.polyline(latLngs, { color: activity.color, weight: 3, opacity: 0.9 }).addTo(map));
     latLngs.forEach(p => bounds.extend(p));
-    first ??= latLngs[0];
-    last = latLngs[latLngs.length - 1];
   }
-  if (first && last) {
-    L.circleMarker(first, { radius: 5, color: 'white', weight: 2, fillColor: '#2e9e44', fillOpacity: 1 })
-      .bindTooltip('Start').addTo(map);
-    L.circleMarker(last, { radius: 5, color: 'white', weight: 2, fillColor: '#d62d20', fillOpacity: 1 })
-      .bindTooltip('Finish').addTo(map);
+  if (segments.length > 0) {
+    const lastSegment = segments[segments.length - 1];
+    routeMarker(segments[0][0], 'start').addTo(map);
+    routeMarker(lastSegment[lastSegment.length - 1], 'finish').addTo(map);
   }
 
   if (bounds.isValid()) map.fitBounds(bounds, { padding: [20, 20], maxZoom: 16 });
   else map.setView([20, 0], 2);
-  cardMaps.set(element, map);
+  const player = addRoutePlayerControl(map, segments, routeLayers, activity.color, playbackDuration(activity));
+  cardMaps.set(element, { map, player });
 }
 
 function hideMap(element: Element): void {
-  cardMaps.get(element)?.remove();
+  const entry = cardMaps.get(element);
+  if (!entry) return;
+  entry.player.destroy();
+  entry.map.remove();
   cardMaps.delete(element);
 }
 
