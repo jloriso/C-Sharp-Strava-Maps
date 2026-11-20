@@ -1,31 +1,45 @@
-import type { LatLng, MapKind } from './types';
+import type { LatLng } from './types';
 
-/** Messages exchanged between the map pages and the MapSwitcher page that hosts them in an iframe. */
+/** Messages exchanged between the map pages and the MapSwitcher page that hosts them in iframes. */
 
-/** Map page -> parent: the timeline slider moved. */
-export interface TimelinePositionMessage {
-  type: 'gpxworldmap-timeline-position';
+/** Timeline position: the first `count` activities are shown; `date` is the newest shown (null = none). */
+export interface TimelinePosition {
   count: number;
+  date: string | null;
 }
 
-/** Map page -> parent: switch to the other map, carrying over the current view. */
-export interface SwitchMapMessage {
-  type: 'gpxworldmap-switch-map';
-  map: MapKind;
-  count: number;
+/** Map page -> parent: the map page has loaded and is listening for state. */
+export interface MapReadyMessage {
+  type: 'gpxworldmap-map-ready';
+}
+
+/** Map page -> parent: the timeline slider moved. */
+export interface TimelinePositionMessage extends TimelinePosition {
+  type: 'gpxworldmap-timeline-position';
+}
+
+/** Map page -> parent: the map was panned or zoomed. */
+export interface MapViewMessage {
+  type: 'gpxworldmap-map-view';
   center: LatLng;
   zoom: number;
 }
 
-/** Parent -> map page: restore timeline position and view after loading. */
-export interface SetMapStateMessage {
+/** Map page -> parent: a SetMapStateMessage has been applied and the map has rendered it. */
+export interface MapStateAppliedMessage {
+  type: 'gpxworldmap-map-state-applied';
+  requestId: number;
+}
+
+/** Parent -> map page: apply the timeline position and view of the previously shown map. */
+export interface SetMapStateMessage extends TimelinePosition {
   type: 'gpxworldmap-set-map-state';
-  count: number;
+  requestId: number;
   center: LatLng | null;
   zoom: number | null;
 }
 
-export type MapPageMessage = TimelinePositionMessage | SwitchMapMessage;
+export type MapPageMessage = MapReadyMessage | TimelinePositionMessage | MapViewMessage | MapStateAppliedMessage;
 
 export const isEmbedded = (): boolean => window.self !== window.top;
 

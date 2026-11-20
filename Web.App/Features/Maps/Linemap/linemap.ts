@@ -3,7 +3,6 @@ import '../Shared/mapPage.css';
 import { addActivityTypeControl } from '../../Controls/ActivityType/ActivityTypeControl';
 import { addBookmarkControl } from '../../Controls/Bookmark/BookmarkControl';
 import { addHomeControl } from '../../Controls/Home/HomeControl';
-import { addMapTypeControl } from '../../Controls/MapType/MapTypeControl';
 import { createTimelineControl } from '../../Controls/Timeline/TimelineControl';
 import { readPageData } from '../../Shared/pageData';
 import { getElement, toTypeColorLookup } from '../../Shared/types';
@@ -143,5 +142,4 @@ addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
 });
 addHomeControl(map, settings.homeUrl);
 const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
-addMapTypeControl(map, 'linemap', () => timeline.getCount());
 listenForMapState(map, timeline);

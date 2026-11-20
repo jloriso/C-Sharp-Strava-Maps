@@ -1,14 +1,17 @@
 import './TimelineControl.css';
-import { postToParent } from '../../Shared/messages';
+import { postToParent, type TimelinePosition } from '../../Shared/messages';
 
 export interface DatedItem {
   date: string;
 }
 
 export interface TimelineControl {
-  getCount(): number;
-  /** Shows the first `count` items; `notifyParent` reports the new position to the MapSwitcher. */
-  setCount(count: number, notifyParent?: boolean): void;
+  getPosition(): TimelinePosition;
+  /**
+   * Moves to a position reported by another map. The date takes priority, since the heatmap and
+   * line map timelines can contain different activities; the count is used when it agrees with it.
+   */
+  setPosition(position: TimelinePosition, notifyParent?: boolean): void;
 }
 
 /**
@@ -66,7 +69,28 @@ export function createTimelineControl(
     startButton.disabled = olderButton.disabled = current === 0;
     newerButton.disabled = latestButton.disabled = current === items.length;
     onChange(current);
-    if (notifyParent) postToParent({ type: 'gpxworldmap-timeline-position', count: current });
+    if (notifyParent) postToParent({ type: 'gpxworldmap-timeline-position', ...getPosition() });
+  };
+
+  const getPosition = (): TimelinePosition =>
+    ({ count: current, date: current > 0 ? items[current - 1].date : null });
+
+  /** Number of items dated on or before `date` (items are in chronological order). */
+  const countThroughDate = (date: string) => {
+    let low = 0;
+    let high = items.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (items[mid].date <= date) low = mid + 1;
+      else high = mid;
+    }
+    return low;
+  };
+
+  const setPosition = ({ count, date }: TimelinePosition, notifyParent = true) => {
+    if (date === null) setCount(0, notifyParent);
+    else if (count > 0 && items[count - 1]?.date === date) setCount(count, notifyParent);
+    else setCount(countThroughDate(date), notifyParent);
   };
 
   slider.addEventListener('input', () => setCount(Number(slider.value)));
@@ -76,5 +100,5 @@ export function createTimelineControl(
   latestButton.addEventListener('click', () => setCount(items.length));
 
   setCount(0);
-  return { getCount: () => current, setCount };
+  return { getPosition, setPosition };
 }

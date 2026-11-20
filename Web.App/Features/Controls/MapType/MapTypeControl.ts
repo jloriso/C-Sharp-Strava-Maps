@@ -1,6 +1,5 @@
 import './MapTypeControl.css';
 import '../../Shared/legend.css';
-import { isEmbedded, postToParent } from '../../Shared/messages';
 import type { MapKind } from '../../Shared/types';
 
 const mapTypes: { kind: MapKind; label: string }[] = [
@@ -8,44 +7,44 @@ const mapTypes: { kind: MapKind; label: string }[] = [
   { kind: 'linemap', label: 'Line Map' },
 ];
 
+export interface MapTypeControl {
+  setActive(kind: MapKind): void;
+}
+
 /**
- * Heatmap / Line Map toggle. Only shown when the page is embedded in the MapSwitcher,
- * which performs the actual switch and carries over the timeline position and view.
+ * Heatmap / Line Map toggle for the MapSwitcher page. It floats over the hosted map
+ * (beside the map's Home button); the MapSwitcher performs the actual switch.
  */
-export function addMapTypeControl(map: L.Map, activeMap: MapKind, getTimelineCount: () => number): void {
-  if (!isEmbedded()) return;
+export function createMapTypeControl(
+  parent: HTMLElement,
+  activeMap: MapKind,
+  onSelect: (kind: MapKind) => void,
+): MapTypeControl {
+  const container = document.createElement('div');
+  container.className = 'legend map-type-control';
+  const buttonList = document.createElement('div');
+  buttonList.className = 'map-type-buttons';
+  container.append(buttonList);
 
-  const control = new L.Control({ position: 'topleft' });
-  control.onAdd = () => {
-    const container = L.DomUtil.create('div', 'legend map-type-control');
-    const buttonList = document.createElement('div');
-    buttonList.className = 'map-type-buttons';
-    container.append(buttonList);
+  const buttons = new Map<MapKind, HTMLButtonElement>();
+  for (const { kind, label } of mapTypes) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'map-type-btn';
+    button.textContent = label;
+    button.addEventListener('click', () => onSelect(kind));
+    buttons.set(kind, button);
+    buttonList.append(button);
+  }
 
-    for (const { kind, label } of mapTypes) {
-      const isActive = kind === activeMap;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'map-type-btn';
-      button.classList.toggle('active', isActive);
-      button.setAttribute('aria-pressed', String(isActive));
-      button.textContent = label;
-      button.addEventListener('click', () => {
-        if (isActive) return;
-        const center = map.getCenter();
-        postToParent({
-          type: 'gpxworldmap-switch-map',
-          map: kind,
-          count: getTimelineCount(),
-          center: { lat: center.lat, lng: center.lng },
-          zoom: map.getZoom(),
-        });
-      });
-      buttonList.append(button);
+  const setActive = (kind: MapKind) => {
+    for (const [buttonKind, button] of buttons) {
+      button.classList.toggle('active', buttonKind === kind);
+      button.setAttribute('aria-pressed', String(buttonKind === kind));
     }
-
-    L.DomEvent.disableClickPropagation(container);
-    return container;
   };
-  control.addTo(map);
+
+  setActive(activeMap);
+  parent.append(container);
+  return { setActive };
 }

@@ -5,4 +5,5 @@
 }
 .map-type-btn.active { background: #3388ff; border-color: #3388ff; color: #fff; }
 .map-type-btn:hover:not(.active) { background: #ececec; }
-.leaflet-top.leaflet-left .map-type-control { clear: none; margin-top: 10px; margin-left: 4px; }
+/* Positioned beside the hosted map's Home button (top-left Leaflet control). */
+.map-type-control { position: absolute; top: 10px; left: 72px; z-index: 2; }
