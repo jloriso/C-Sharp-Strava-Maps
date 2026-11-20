@@ -41,13 +41,13 @@ Copy `gpxworldmap.config.example.json` to `gpxworldmap.config.json`, set the inp
 paths, then run:
 
 ```sh
-dotnet run
+dotnet run --project Web.App
 ```
 
 Alternatively, pass positional arguments:
 
 ```sh
-dotnet run -- "path/to/activity-folder" "path/to/activities.csv" \
+dotnet run --project Web.App -- "path/to/activity-folder" "path/to/activities.csv" \
   heatmap.html linemap.html weekly-mileage.html
 ```
 
@@ -98,14 +98,16 @@ revealed in the timeline and its route bounds intersect the current map bounds.
 ### Project layout
 
 ```text
-Program.cs                                  # input processing, data building, page routing
-Config/                                     # config models and CLI/config loading
-FileReader/FileTypeReaders/                 # CSV, GPX, TCX, FIT, and gzip readers
-Models/                                     # activity metadata, tracks, parsed geometry
-Shared/                                     # activity IDs, categories, distance, locations
-Rendering/                                  # HTML template loader and map rendering helpers
-Server/                                     # local HTTP server and browser launch
-Index/index.html                            # root shell with one app navigation
+GpxWorldMap.sln                             # solution containing every project below
+Directory.Build.props                       # shared target framework / nullable settings
+Web.App/Program.cs                          # entry point: input processing, data building, page routing
+Api.Config/                                 # config models and CLI/config loading
+Api.FileReader/FileTypeReaders/             # CSV, GPX, TCX, FIT, and gzip readers
+Api.Models/                                 # activity metadata, tracks, parsed geometry
+Api.Shared/                                 # activity IDs, categories, distance, locations
+Web.Rendering/                              # HTML template loader and map rendering helpers
+Web.Server/                                 # local HTTP server and browser launch
+Web.Index/index.html                        # root shell with one app navigation
 Web.Features/Controls/                      # injected navigation and Leaflet controls
 Web.Features/Controls/Templates/            # control JavaScript templates
 Web.Features/Charts/WeeklyMileage/          # mileage aggregation, chart builder, template
@@ -120,7 +122,7 @@ instead of duplicating it on every content page.
 
 ### Tuning
 
-- Edit the preset views in `Shared/DefaultLocations.cs`.
+- Edit the preset views in `Api.Shared/DefaultLocations.cs`.
 - Change heatmap rounding and weight clipping in `HeatmapDataBuilder.Build(...)`.
 - Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
 - Change the mileage chart window and navigation step in
