@@ -25,6 +25,12 @@ export interface MapViewMessage {
   zoom: number;
 }
 
+/** Map page -> parent: activity type checkboxes changed. */
+export interface ActivityTypesMessage {
+  type: 'gpxworldmap-activity-types';
+  hiddenTypes: string[];
+}
+
 /** Map page -> parent: a SetMapStateMessage has been applied and the map has rendered it. */
 export interface MapStateAppliedMessage {
   type: 'gpxworldmap-map-state-applied';
@@ -37,9 +43,15 @@ export interface SetMapStateMessage extends TimelinePosition {
   requestId: number;
   center: LatLng | null;
   zoom: number | null;
+  hiddenTypes: string[];
 }
 
-export type MapPageMessage = MapReadyMessage | TimelinePositionMessage | MapViewMessage | MapStateAppliedMessage;
+export type MapPageMessage =
+  | MapReadyMessage
+  | TimelinePositionMessage
+  | MapViewMessage
+  | ActivityTypesMessage
+  | MapStateAppliedMessage;
 
 export const isEmbedded = (): boolean => window.self !== window.top;
 

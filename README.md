@@ -11,18 +11,21 @@ the app navigation once and displays one content page at a time.
   Each chart has its own date slider and Start, Older, Newer, and Latest buttons.
   The chart window shows up to 26 weeks; Older/Newer move it by 12 weeks.
 - **Maps** shows one map at a time. Its Heatmap / Line Map toggle (only on this page)
-  switches maps while retaining the timeline date, map center, and zoom. The current
+  switches maps while retaining the timeline date, activity type selection, map
+  center, and zoom. The current
   map stays visible until the other has loaded and rendered; both stay loaded
   afterwards, so switching back is immediate.
-- **Heatmap** displays activity points by category. Dated activities are revealed
-  chronologically; undated activities remain as a baseline. Start/Older sit to the
+- **Heatmap** displays activity points by category. It opens at Latest with every
+  activity shown; the timeline steps back through dated activities chronologically,
+  and undated activities remain as a baseline. Start/Older sit to the
   left of the slider and Newer/Latest to the right.
-- **Line Map** shows route activity in the current viewport. Its chronological
-  timeline uses the same controls. Panning or zooming recalculates which revealed
-  routes intersect the viewport.
+- **Line Map** shows route activity in the current viewport, also opening at Latest
+  with all routes drawn. Its chronological timeline uses the same controls. Panning
+  or zooming recalculates which revealed routes intersect the viewport.
 
 Both maps include category visibility checkboxes, a Home button, and a Jump to
-control for these preset views:
+control for these preset views (a view is highlighted only while the map is still
+showing it):
 
 | Location | Latitude | Longitude | Zoom |
 |---|---:|---:|---:|

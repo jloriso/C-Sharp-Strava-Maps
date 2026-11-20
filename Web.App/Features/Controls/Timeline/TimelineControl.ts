@@ -99,6 +99,7 @@ export function createTimelineControl(
   newerButton.addEventListener('click', () => setCount(current + step));
   latestButton.addEventListener('click', () => setCount(items.length));
 
-  setCount(0);
+  // Start with every dated activity shown; the MapSwitcher records this as the initial position.
+  setCount(items.length);
   return { getPosition, setPosition };
 }

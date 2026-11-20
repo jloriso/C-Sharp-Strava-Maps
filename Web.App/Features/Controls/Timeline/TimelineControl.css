@@ -11,7 +11,9 @@
 .timeline-button:hover { background: #edf0f1; }
 .timeline-button:disabled { opacity: 0.4; cursor: default; }
 #timeline-slider { width: 100%; min-width: 0; accent-color: #16836d; }
-#timeline-date { min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+/* Fixed width (fits "yyyy-mm-dd · 9999 / 9999") so the slider track doesn't resize as the label changes. */
+#timeline-date { min-width: 24ch; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#timeline-year { min-width: 4ch; font-variant-numeric: tabular-nums; }
 @media (max-width: 480px) {
     #timeline-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; }
     #timeline-start { grid-column: 1; grid-row: 1; }

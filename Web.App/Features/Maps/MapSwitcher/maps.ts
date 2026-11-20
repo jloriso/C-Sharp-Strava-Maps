@@ -24,8 +24,9 @@ const stage = getElement('map-stage');
 const mapUrls: Record<MapKind, string> = { heatmap: data.heatmapHref, linemap: data.linemapHref };
 const mapTitles: Record<MapKind, string> = { heatmap: 'Heatmap', linemap: 'Line Map' };
 
-/** Timeline position and view of the visible map, carried over to the other map on switch. */
-const state: Omit<SetMapStateMessage, 'type' | 'requestId'> = { count: 0, date: null, center: null, zoom: null };
+/** Timeline position, view, and activity type selection of the visible map, carried over on switch. */
+const state: Omit<SetMapStateMessage, 'type' | 'requestId'> =
+  { count: 0, date: null, center: null, zoom: null, hiddenTypes: [] };
 const frames = new Map<MapKind, MapFrame>();
 let activeKind: MapKind = 'heatmap';
 let targetKind: MapKind | null = null;
@@ -107,6 +108,9 @@ window.addEventListener('message', (event: MessageEvent<MapPageMessage>) => {
     if (!isValidLatLng(message.center) || !Number.isFinite(Number(message.zoom))) return;
     state.center = { lat: message.center.lat, lng: message.center.lng };
     state.zoom = Number(message.zoom);
+  } else if (message.type === 'gpxworldmap-activity-types') {
+    if (!Array.isArray(message.hiddenTypes)) return;
+    state.hiddenTypes = message.hiddenTypes.filter(type => typeof type === 'string');
   }
 
   // The visible map changed while the target was still preparing; resend the latest state.

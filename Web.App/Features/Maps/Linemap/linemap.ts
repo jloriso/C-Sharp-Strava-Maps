@@ -126,8 +126,8 @@ if (hasTimeline) {
   addStaticLineLayers();
 }
 
-addBookmarkControl(map, settings.locations, settings.defaultLocation);
-addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
+addBookmarkControl(map, settings.locations);
+const activityTypeControl = addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
   if (visible) visibleTypes.add(type);
   else visibleTypes.delete(type);
 
@@ -142,4 +142,4 @@ addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
 });
 addHomeControl(map, settings.homeUrl);
 const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
-listenForMapState(map, timeline);
+listenForMapState(map, timeline, activityTypeControl);

@@ -1,4 +1,5 @@
 import { isEmbedded, isValidLatLng, postToParent, type SetMapStateMessage } from '../../Shared/messages';
+import type { ActivityTypeControl } from '../../Controls/ActivityType/ActivityTypeControl';
 import type { TimelineControl } from '../../Controls/Timeline/TimelineControl';
 
 const tileLoadTimeoutMs = 2000;
@@ -7,7 +8,7 @@ const tileLoadTimeoutMs = 2000;
  * Connects a map page to the MapSwitcher parent: reports view changes, applies the state
  * sent before the page is revealed, and confirms once that state has rendered.
  */
-export function listenForMapState(map: L.Map, timeline: TimelineControl): void {
+export function listenForMapState(map: L.Map, timeline: TimelineControl, activityTypes: ActivityTypeControl): void {
   if (!isEmbedded()) return;
 
   map.on('moveend', () => {
@@ -24,6 +25,7 @@ export function listenForMapState(map: L.Map, timeline: TimelineControl): void {
     if (isValidLatLng(message.center) && Number.isFinite(zoom)) {
       map.setView([message.center.lat, message.center.lng], zoom, { animate: false });
     }
+    activityTypes.setHiddenTypes(Array.isArray(message.hiddenTypes) ? message.hiddenTypes : []);
     timeline.setPosition({ count: Number(message.count) || 0, date: message.date ?? null }, false);
 
     void whenRendered(map).then(() =>

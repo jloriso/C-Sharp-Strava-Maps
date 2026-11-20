@@ -35,28 +35,35 @@ const heatOptions: HeatMapOptions = {
   gradient: { 0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 0.85: 'red' },
 };
 
+// Layers stay on the map and hidden types get no points: leaflet.heat 0.2.0 throws if a layer
+// is removed while a redraw is pending, or if setLatLngs is called while it is off the map.
 const allTypes = new Set([...Object.keys(undatedPointsByType), ...timelineActivities.map(a => a.type)]);
 const heatLayersByType = new Map<string, HeatLayer>();
 for (const type of allTypes) heatLayersByType.set(type, L.heatLayer([], heatOptions).addTo(map));
+const hiddenTypes = new Set<string>();
+let pointsByType = new Map<string, HeatPoint[]>();
+
+function drawType(type: string): void {
+  heatLayersByType.get(type)?.setLatLngs(hiddenTypes.has(type) ? [] : pointsByType.get(type) ?? []);
+}
 
 function renderTimeline(activityCount: number): void {
-  const pointsByType = new Map<string, HeatPoint[]>();
+  pointsByType = new Map<string, HeatPoint[]>();
   for (const [type, points] of Object.entries(undatedPointsByType)) pointsByType.set(type, points.slice());
   for (const activity of timelineActivities.slice(0, activityCount)) {
     const points = pointsByType.get(activity.type) ?? [];
     points.push(...activity.points);
     pointsByType.set(activity.type, points);
   }
-  for (const [type, layer] of heatLayersByType) layer.setLatLngs(pointsByType.get(type) ?? []);
+  heatLayersByType.forEach((_, type) => drawType(type));
 }
 
-addBookmarkControl(map, settings.locations, settings.defaultLocation);
-addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
-  const layer = heatLayersByType.get(type);
-  if (!layer) return;
-  if (visible) map.addLayer(layer);
-  else map.removeLayer(layer);
+addBookmarkControl(map, settings.locations);
+const activityTypeControl = addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
+  if (visible) hiddenTypes.delete(type);
+  else hiddenTypes.add(type);
+  drawType(type);
 });
 addHomeControl(map, settings.homeUrl);
 const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
-listenForMapState(map, timeline);
+listenForMapState(map, timeline, activityTypeControl);

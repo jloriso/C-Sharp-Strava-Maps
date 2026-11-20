@@ -6,8 +6,6 @@ namespace GpxWorldMap.Web.Features.Maps.Shared
     /// MapPageSettings interface in baseMap.ts.</summary>
     public static class MapPageSettings
     {
-        private const string DefaultLocation = "Chicago";
-
         public static object Create(
             List<(string Type, string Color)> types,
             List<MapLocation> locations,
@@ -19,7 +17,6 @@ namespace GpxWorldMap.Web.Features.Maps.Shared
             {
                 ActivityTypes = types.Select(t => new { t.Type, t.Color }),
                 Locations = locations.Select(ToJson),
-                DefaultLocation,
                 InitialView = ToJson(initial),
                 TileUrlQuery = string.IsNullOrWhiteSpace(cartoApiKey) ? "" : "?key=" + Uri.EscapeDataString(cartoApiKey),
                 HomeUrl = "/"

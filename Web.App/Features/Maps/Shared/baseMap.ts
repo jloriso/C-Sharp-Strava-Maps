@@ -4,7 +4,6 @@ import type { ActivityTypeColor, MapLocation } from '../../Shared/types';
 export interface MapPageSettings {
   activityTypes: ActivityTypeColor[];
   locations: MapLocation[];
-  defaultLocation: string;
   initialView: MapLocation;
   tileUrlQuery: string;
   homeUrl: string;
