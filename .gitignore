@@ -5,3 +5,5 @@ obj/
 /heatmaps
 gpxworldmap.config.json
 map.html
+node_modules/
+dist/

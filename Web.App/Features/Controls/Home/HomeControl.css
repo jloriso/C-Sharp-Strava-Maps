@@ -1,0 +1,12 @@
+.home-control .home-btn {
+    font: 16px sans-serif;
+    line-height: 1;
+    width: 34px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f7f7f7;
+    cursor: pointer;
+    padding: 0;
+}
+.home-control .home-btn:hover { background: #ececec; }

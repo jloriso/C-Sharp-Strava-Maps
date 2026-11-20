@@ -1,0 +1,8 @@
+.map-type-buttons { display: flex; gap: 4px; }
+.map-type-btn {
+    height: 30px; padding: 0 9px; border: 1px solid #ccc; border-radius: 3px; background: #f7f7f7;
+    color: #24292d; font: 13px sans-serif; cursor: pointer; white-space: nowrap;
+}
+.map-type-btn.active { background: #3388ff; border-color: #3388ff; color: #fff; }
+.map-type-btn:hover:not(.active) { background: #ececec; }
+.leaflet-top.leaflet-left .map-type-control { clear: none; margin-top: 10px; margin-left: 4px; }

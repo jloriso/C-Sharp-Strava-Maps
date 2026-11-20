@@ -32,6 +32,9 @@ control for these preset views:
 ### Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) or later.
+- [Node.js](https://nodejs.org) 20 or later (with npm). Building `Web.App` runs
+  `npm ci` (first build only) and `npm run build` automatically to compile the
+  TypeScript pages.
 - Internet access in the browser to load Leaflet, Chart.js, and map tiles from
   public CDNs.
 
@@ -107,18 +110,39 @@ Api.Models/                                 # activity metadata, tracks, parsed 
 Api.Shared/                                 # activity IDs, categories, distance, locations
 Web.Rendering/                              # HTML template loader and map rendering helpers
 Web.Server/                                 # local HTTP server and browser launch
-Web.Index/index.html                        # root shell with one app navigation
-Web.Features/Controls/                      # injected navigation and Leaflet controls
-Web.Features/Controls/Templates/            # control JavaScript templates
-Web.Features/Charts/WeeklyMileage/          # mileage aggregation, chart builder, template
-Web.Features/Maps/Heatmap/                  # chronological heatmap data and page
-Web.Features/Maps/Linemap/                  # chronological route data and page
-Web.Features/Maps/MapSwitcher/              # map toggle wrapper page
+Web.App/package.json, tsconfig.json         # frontend (TypeScript + Vite) build
+Web.App/vite.config.ts                      # shared Vite config (single-file HTML output)
+Web.App/scripts/build-pages.mjs             # builds each page into Web.App/dist/
+Web.App/Index/                              # root shell page with one app navigation
+Web.App/Features/Shared/                    # shared TS types, page-data reader, iframe messages
+Web.App/Features/Controls/<Name>/           # one folder per control (<Name>Control.ts + .css)
+Web.App/Features/Charts/WeeklyMileage/      # mileage aggregation, chart builder, page
+Web.App/Features/Maps/Shared/               # base map setup and shared map settings
+Web.App/Features/Maps/Heatmap/              # chronological heatmap data and page
+Web.App/Features/Maps/Linemap/              # chronological route data and page
+Web.App/Features/Maps/MapSwitcher/          # map toggle wrapper page
 ```
 
-The controls under `Web.Features/Controls` own their markup and JavaScript templates;
-page builders inject them where needed. The index shell injects app navigation once,
-instead of duplicating it on every content page.
+Each page is an `.html` + `.ts` (+ `.css`) next to its C# `*HtmlBuilder`. The C#
+builder only serializes data into the page's
+`<script id="page-data" type="application/json">{{PAGE_DATA_JSON}}</script>` block
+(via `PageDataBuilder`); all markup and behavior live in TypeScript. Controls are
+typed modules that pages import, e.g. `addBookmarkControl(map, locations, ...)`.
+
+### Frontend development
+
+Building `Web.App` (or the solution) compiles the frontend automatically. To work on
+the TypeScript directly, run these from `Web.App/`:
+
+```sh
+npm install          # first time only
+npm run typecheck    # tsc --noEmit
+npm run build        # type check + build every page into dist/
+```
+
+To add a page, create its `.html`/`.ts` and add it to the `pages` list in
+`scripts/build-pages.mjs`. Pass `-p:SkipClientBuild=true` to `dotnet build` to skip
+the npm step.
 
 ### Tuning
 
@@ -126,4 +150,4 @@ instead of duplicating it on every content page.
 - Change heatmap rounding and weight clipping in `HeatmapDataBuilder.Build(...)`.
 - Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
 - Change the mileage chart window and navigation step in
-  `Web.Features/Charts/WeeklyMileage/weeklymileage.html`.
+  `Web.App/Features/Charts/WeeklyMileage/weeklymileage.ts`.

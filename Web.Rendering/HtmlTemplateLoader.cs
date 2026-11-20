@@ -1,16 +1,10 @@
 ﻿namespace GpxWorldMap.Rendering
 {
     /// <summary>
-    /// Loads an HTML page template that lives in its own file under
-    /// Features/feature/ (e.g. heatmap.html, linemap.html), rather than being
-    /// embedded as a giant C# verbatim string inside the builder class itself.
-    ///
-    /// Templates are compiled in as <b>embedded resources</b> (see the
-    /// &lt;EmbeddedResource Include="Features/*/*.html" /&gt; entry in the
-    /// .csproj), so the page markup ships inside the single compiled assembly --
-    /// there's no risk of a template file going missing at runtime regardless of the
-    /// working directory, or whether the app was run via `dotnet run` or published as
-    /// a standalone executable.
+    /// Loads a built HTML page template from the application's output directory
+    /// (e.g. Features/Maps/Heatmap/heatmap.html). Web.App's Vite build emits one
+    /// self-contained HTML file per page into Web.App/dist/, and the .csproj copies
+    /// those files next to the executable with the dist/ prefix removed.
     /// </summary>
     public static class HtmlTemplateLoader
     {
@@ -21,9 +15,9 @@
             if (!File.Exists(path))
             {
                 throw new InvalidOperationException(
-                    $"Couldn't find template '{templateFileName}' at '{path}'. Make sure " +
-                    $"{templatesFolder}/* is marked as <Content CopyToOutputDirectory=\"PreserveNewest\"> " +
-                    "in the .csproj and that the project has been rebuilt since the file was added.");
+                    $"Couldn't find template '{templateFileName}' at '{path}'. Make sure the page " +
+                    "is listed in Web.App/scripts/build-pages.mjs and rebuild Web.App (which runs " +
+                    "`npm run build` and copies dist/**/*.html to the output directory).");
             }
 
             return File.ReadAllText(path);
