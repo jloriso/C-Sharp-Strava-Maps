@@ -15,12 +15,14 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
             string timelineActivitiesJs,
             List<(string Type, string Color)> types,
             List<MapLocation> locations,
-            string? cartoApiKey)
+            string? cartoApiKey,
+            string activityDetailsUrl)
         {
             return new PageDataBuilder()
                 .AddRaw("lineDataByType", lineDataByTypeJs)
                 .AddRaw("undatedActivities", undatedActivitiesJs)
                 .AddRaw("timelineActivities", timelineActivitiesJs)
+                .Add("activityDetailsUrl", activityDetailsUrl)
                 .Add("settings", MapPageSettings.Create(types, locations, cartoApiKey))
                 .ApplyTo(HtmlTemplateLoader.Load("Features/Maps/Linemap", "linemap.html"));
         }

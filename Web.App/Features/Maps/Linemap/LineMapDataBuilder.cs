@@ -85,6 +85,8 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
 
         private sealed class TimelineActivity
         {
+            /// <summary>Activity id; the popup uses it to fetch the activity's details JSON.</summary>
+            public string Id { get; init; } = "";
             public string? Date { get; init; }
             [JsonIgnore]
             public DateTime? SortDate { get; init; }
@@ -161,6 +163,7 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
 
             return new TimelineActivity
             {
+                Id = track.ActivityId,
                 Date = track.ActivityDate?.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 SortDate = track.ActivityDate,
                 Type = ActivityCategory.CategoryForType(track.Type),

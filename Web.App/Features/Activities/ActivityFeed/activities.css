@@ -10,41 +10,6 @@ html, body { margin: 0; font: 14px sans-serif; background: #fafafa; color: #2424
     text-transform: uppercase; letter-spacing: 0.04em;
 }
 
-.activity-card {
-    background: white; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-    padding: 14px 14px 12px; margin-bottom: 16px;
-}
-.activity-header { display: flex; align-items: flex-start; gap: 10px; }
-.activity-type-badge {
-    flex: 0 0 auto; margin-top: 2px; padding: 2px 8px; border-radius: 10px;
-    color: white; font-size: 12px; font-weight: 600;
-}
-.activity-title { min-width: 0; }
-.activity-title h2 { font-size: 16px; margin: 0; overflow-wrap: anywhere; }
-.activity-date { color: #666; font-size: 12px; margin-top: 2px; }
-
-.activity-stats { display: flex; gap: 28px; margin: 12px 0; }
-.activity-stats div { display: flex; flex-direction: column-reverse; }
-.activity-stats dt { color: #666; font-size: 12px; }
-.activity-stats dd { margin: 0; font-size: 18px; font-weight: 600; }
-
-.activity-map { height: 280px; border-radius: 4px; background: #e8eaed; }
-
-.activity-description { margin: 10px 0 0; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.4; }
-.activity-gear { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: -4px 0 12px; font-size: 13px; }
-.gear-label { color: #666; font-size: 12px; }
-.gear-name { font-weight: 600; }
-.gear-detail { color: #666; }
-.gear-detail::before { content: "· "; }
-
-/* Start: green dot with a white ring. Finish: checkered flag dot. */
-.route-marker { box-sizing: border-box; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.45); }
-.route-start { background: #2e9e44; border: 3px solid white; }
-.route-finish {
-    border: 2px solid #242428;
-    background: repeating-conic-gradient(#242428 0 25%, white 0 50%) 0 0 / 5px 5px;
-}
-
 #feed-status { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 16px; color: #666; }
 #feed-status:empty { display: none; }
 #feed-sentinel { height: 1px; }
@@ -58,6 +23,4 @@ html, body { margin: 0; font: 14px sans-serif; background: #fafafa; color: #2424
 @media (max-width: 600px) {
     #page { padding: 10px; }
     .month-heading { margin: 0 -10px; padding: 8px 10px 4px; }
-    .activity-stats { gap: 18px; }
-    .activity-map { height: 220px; }
 }

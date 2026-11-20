@@ -1,6 +1,7 @@
 import type { FeatureCollection, LineString } from 'geojson';
 import '../Shared/mapPage.css';
 import { addActivityTypeControl } from '../../Controls/ActivityType/ActivityTypeControl';
+import { createActivityDetailsControl } from '../../Controls/ActivityDetails/ActivityDetailsControl';
 import { addBookmarkControl } from '../../Controls/Bookmark/BookmarkControl';
 import { addHomeControl } from '../../Controls/Home/HomeControl';
 import { createTimelineControl } from '../../Controls/Timeline/TimelineControl';
@@ -17,6 +18,7 @@ interface RouteProperties {
 }
 
 interface LineActivity {
+  id: string;
   date: string | null;
   type: string;
   /** [south, west, north, east] */
@@ -34,14 +36,17 @@ interface LineMapPageData {
   lineDataByType: Record<string, FeatureCollection<LineString, RouteProperties>>;
   undatedActivities: LineActivity[];
   timelineActivities: DatedLineActivity[];
+  /** Served URL of one activity's details JSON, with an "{id}" placeholder. */
+  activityDetailsUrl: string;
   settings: MapPageSettings;
 }
 
-const { lineDataByType, undatedActivities, timelineActivities, settings } = readPageData<LineMapPageData>();
+const { lineDataByType, undatedActivities, timelineActivities, activityDetailsUrl, settings } = readPageData<LineMapPageData>();
 const map = createBaseMap(settings);
 const typeColors = toTypeColorLookup(settings.activityTypes);
 const sharedRenderer = L.canvas({ padding: 0.5 });
 const hasTimeline = timelineActivities.length > 0;
+const activityDetails = createActivityDetailsControl(activityDetailsUrl, settings.tileUrlQuery);
 
 const visibleTypes = new Set(settings.activityTypes.map(t => t.type));
 const staticLayersByType = new Map<string, L.GeoJSON>();
@@ -91,7 +96,7 @@ function syncActivityLayer(activity: LineActivity): void {
       smoothFactor: 1.5,
     });
     created.on('click', (e: L.LeafletMouseEvent) => {
-      created.bindPopup(`${activity.type} &middot; ${activity.date ?? 'Undated'}`).openPopup(e.latlng);
+      created.bindPopup(() => activityPopup(activity)).openPopup(e.latlng);
     });
     activityLayers.set(activity, created);
     layer = created;
@@ -100,6 +105,22 @@ function syncActivityLayer(activity: LineActivity): void {
   if (!layer) return;
   if (shouldShow && !map.hasLayer(layer)) map.addLayer(layer);
   else if (!shouldShow && map.hasLayer(layer)) map.removeLayer(layer);
+}
+
+/** "Run · 2024-05-01" plus a link that opens the activity's full details. */
+function activityPopup(activity: LineActivity): HTMLElement {
+  const content = document.createElement('div');
+  content.append(`${activity.type} · ${activity.date ?? 'Undated'}`);
+  const details = document.createElement('button');
+  details.type = 'button';
+  details.className = 'activity-popup-details';
+  details.textContent = 'View activity details';
+  details.addEventListener('click', () => {
+    map.closePopup();
+    activityDetails.open(activity.id);
+  });
+  content.append(details);
+  return content;
 }
 
 function syncVisibleActivities(): void {

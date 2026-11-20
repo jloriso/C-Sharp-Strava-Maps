@@ -165,8 +165,8 @@ namespace GpxWorldMap
             var lineData = LineMapDataBuilder.Build(tracks);
             var linemapHtml = LineMapHtmlBuilder.BuildHtml(
                 lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs,
-                categoryColors, locations, config.CartoApiKey);
-        
+                categoryColors, locations, config.CartoApiKey, ActivityFeedDataBuilder.ActivityUrlTemplate);
+
             Console.WriteLine("Building weekly mileage chart...");
             var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
             if (weeklyMileage.SkippedForMissingDate > 0)
@@ -202,6 +202,8 @@ namespace GpxWorldMap
             };
             for (int i = 0; i < feedPageUrls.Count; i++)
                 servedFiles[feedPageUrls[i]] = feed.PagesJson[i];
+            foreach (var (activityId, json) in feed.ActivityJsonById)
+                servedFiles[ActivityFeedDataBuilder.ActivityUrl(activityId)] = json;
 
             LocalWebServer.Serve(indexHtml, servedFiles);
             return 0;

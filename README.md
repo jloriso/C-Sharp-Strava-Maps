@@ -22,7 +22,11 @@ the app navigation once and displays one content page at a time.
   left of the slider and Newer/Latest to the right.
 - **Line Map** shows route activity in the current viewport, also opening at Latest
   with all routes drawn. Its chronological timeline uses the same controls. Panning
-  or zooming recalculates which revealed routes intersect the viewport.
+  or zooming recalculates which revealed routes intersect the viewport. Clicking a
+  route opens a popup with its type and date; its **View activity details** link
+  opens a larger dialog with that activity's full Activities-page card (description,
+  stats, shoes, and a route map with playback). Esc, the × button, or clicking
+  outside the dialog closes it.
 - **Activities** is a feed of every activity with a route, newest first, grouped
   under month headings. Each card shows the activity description, the route on its
   own line map (a green start dot and a checkered finish dot), the distance, the time
@@ -34,7 +38,8 @@ the app navigation once and displays one content page at a time.
   as needed).
   Scrolling down keeps loading older activities until the very first one. The
   activities are fetched 20 at a time from `activity-feed/page-N.json`, and each card's map
-  only exists while it is near the screen.
+  only exists while it is near the screen. Each activity is also served on its own at
+  `activity-feed/activities/{id}.json` for the Line Map's details dialog.
 
 Both maps include category visibility checkboxes, a Home button, and a Jump to
 control for these preset views (a view is highlighted only while the map is still
@@ -140,6 +145,7 @@ Web.App/Features/Maps/Heatmap/              # chronological heatmap data and pag
 Web.App/Features/Maps/Linemap/              # chronological route data and page
 Web.App/Features/Maps/MapSwitcher/          # map toggle wrapper page
 Web.App/Features/Activities/ActivityFeed/   # paged per-activity feed data and page
+Web.App/Features/Activities/Shared/         # activity card + route map shared by the feed and details dialog
 ```
 
 Each page is an `.html` + `.ts` (+ `.css`) next to its C# `*HtmlBuilder`. The C#

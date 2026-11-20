@@ -30,7 +30,18 @@ namespace GpxWorldMap.Web.Features.Activities.ActivityFeed
 
             /// <summary>Serialized JSON for each page, oldest page last.</summary>
             public List<string> PagesJson = new();
+
+            /// <summary>Each activity's JSON on its own (same shape as a page entry), keyed by activity id,
+            /// for pages that show one activity's details on demand (e.g. the Line Map popup).</summary>
+            public Dictionary<string, string> ActivityJsonById = new(StringComparer.Ordinal);
         }
+
+        /// <summary>URL template for a single activity's JSON; "{id}" is the URI-escaped activity id.</summary>
+        public const string ActivityUrlTemplate = "activity-feed/activities/{id}.json";
+
+        /// <summary>Served-file path for one activity's JSON (escaped the same way the browser requests it).</summary>
+        public static string ActivityUrl(string activityId) =>
+            ActivityUrlTemplate.Replace("{id}", Uri.EscapeDataString(activityId));
 
         public static Result Build(IEnumerable<ActivityTrack> tracks, IEnumerable<ShoeRecord> shoes)
         {
@@ -45,14 +56,13 @@ namespace GpxWorldMap.Web.Features.Activities.ActivityFeed
                 .ToList();
 
             var result = new Result { TotalActivities = ordered.Count };
+            var activitiesJson = ordered
+                .Select(t => JsonSerializer.Serialize(ToFeedActivity(t, shoesByGear), SerializerOptions))
+                .ToList();
+            for (int i = 0; i < ordered.Count; i++)
+                result.ActivityJsonById.TryAdd(ordered[i].ActivityId, activitiesJson[i]);
             for (int start = 0; start < ordered.Count; start += PageSize)
-            {
-                var page = new
-                {
-                    Activities = ordered.Skip(start).Take(PageSize).Select(t => ToFeedActivity(t, shoesByGear)).ToList()
-                };
-                result.PagesJson.Add(JsonSerializer.Serialize(page, SerializerOptions));
-            }
+                result.PagesJson.Add("{\"activities\":[" + string.Join(",", activitiesJson.Skip(start).Take(PageSize)) + "]}");
             return result;
         }
 
