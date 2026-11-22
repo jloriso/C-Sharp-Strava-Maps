@@ -42,7 +42,7 @@ interface LineMapPageData {
 }
 
 const { lineDataByType, undatedActivities, timelineActivities, activityDetailsUrl, settings } = readPageData<LineMapPageData>();
-const map = createBaseMap(settings);
+const { map, baseLayerControl } = createBaseMap(settings);
 const typeColors = toTypeColorLookup(settings.activityTypes);
 const sharedRenderer = L.canvas({ padding: 0.5 });
 const hasTimeline = timelineActivities.length > 0;
@@ -163,4 +163,4 @@ const activityTypeControl = addActivityTypeControl(map, settings.activityTypes, 
 });
 addHomeControl(map, settings.homeUrl);
 const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
-listenForMapState(map, timeline, activityTypeControl);
+listenForMapState(map, timeline, activityTypeControl, baseLayerControl);

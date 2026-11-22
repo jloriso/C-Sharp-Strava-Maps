@@ -1,2 +1,3 @@
 html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
 #map { flex: 1 1 auto; }
+.leaflet-bottom.leaflet-right .leaflet-control-layers { clear: none; }

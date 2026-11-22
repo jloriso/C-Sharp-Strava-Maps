@@ -1,4 +1,6 @@
+import { isBaseLayerId } from '../../Shared/types';
 import { isEmbedded, isValidLatLng, postToParent, type SetMapStateMessage } from '../../Shared/messages';
+import type { BaseLayerControl } from './baseMap';
 import type { ActivityTypeControl } from '../../Controls/ActivityType/ActivityTypeControl';
 import type { TimelineControl } from '../../Controls/Timeline/TimelineControl';
 
@@ -8,9 +10,15 @@ const tileLoadTimeoutMs = 2000;
  * Connects a map page to the MapSwitcher parent: reports view changes, applies the state
  * sent before the page is revealed, and confirms once that state has rendered.
  */
-export function listenForMapState(map: L.Map, timeline: TimelineControl, activityTypes: ActivityTypeControl): void {
+export function listenForMapState(
+  map: L.Map,
+  timeline: TimelineControl,
+  activityTypes: ActivityTypeControl,
+  baseLayer: BaseLayerControl,
+): void {
   if (!isEmbedded()) return;
 
+  baseLayer.onChange(id => postToParent({ type: 'gpxworldmap-base-layer', baseLayer: id }));
   map.on('moveend', () => {
     const center = map.getCenter();
     postToParent({ type: 'gpxworldmap-map-view', center: { lat: center.lat, lng: center.lng }, zoom: map.getZoom() });
@@ -25,6 +33,7 @@ export function listenForMapState(map: L.Map, timeline: TimelineControl, activit
     if (isValidLatLng(message.center) && Number.isFinite(zoom)) {
       map.setView([message.center.lat, message.center.lng], zoom, { animate: false });
     }
+    if (isBaseLayerId(message.baseLayer)) baseLayer.setSelected(message.baseLayer);
     activityTypes.setHiddenTypes(Array.isArray(message.hiddenTypes) ? message.hiddenTypes : []);
     timeline.setPosition({ count: Number(message.count) || 0, date: message.date ?? null }, false);
 
