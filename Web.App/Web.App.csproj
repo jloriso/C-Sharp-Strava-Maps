@@ -37,12 +37,12 @@
 
   <Target Name="ClientNpmInstall"
           BeforeTargets="ClientBuild"
-          Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true' And !Exists('node_modules/.package-lock.json')">
+          Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'">
     <Exec Command="node --version" ContinueOnError="true" StandardOutputImportance="low">
       <Output TaskParameter="ExitCode" PropertyName="NodeExitCode" />
     </Exec>
     <Error Condition="'$(NodeExitCode)' != '0'" Text="Node.js is required to build the web pages. Install it from https://nodejs.org and rebuild." />
-    <Exec Command="npm ci" />
+    <Exec Command="node scripts/ensure-dependencies.mjs" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
   <Target Name="ClientBuild"

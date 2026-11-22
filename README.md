@@ -55,9 +55,9 @@ showing it):
 ### Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) or later.
-- [Node.js](https://nodejs.org) 20 or later (with npm). Building `Web.App` runs
-  `npm ci` (first build only) and `npm run build` automatically to compile the
-  TypeScript pages.
+- [Node.js](https://nodejs.org) 20.19+ or 22.12+ (with npm). Building `Web.App`
+  installs the platform-specific npm dependencies as needed and incrementally
+  rebuilds the TypeScript pages.
 - Internet access in the browser to load Leaflet, Chart.js, and map tiles from
   public CDNs.
 
@@ -82,6 +82,9 @@ in any position; the other positional values set heatmap, line-map, and weekly
 mileage output paths, in that order. Use `--config path/to/other.json` to load a
 configuration file from another location. Positional arguments override values
 from the config file.
+
+Use `./run.sh` on Linux or `run.bat` on Windows to start the application. Both
+scripts build the client pages only when their inputs have changed.
 
 The app writes the three generated content pages to their configured paths and
 serves those pages plus the Maps page locally. Open the root URL printed by the
