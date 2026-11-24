@@ -1,5 +1,5 @@
 import './activities.css';
-import { createActivityCard, showActivityMap, type ActivityMap, type FeedActivity } from '../Shared/activityCard';
+import { createActivityDetailsView, type ActivityDetailsView, type FeedActivity } from '../Shared/activityCard';
 import { readPageData } from '../../Shared/pageData';
 import { getElement } from '../../Shared/types';
 
@@ -33,8 +33,7 @@ let lastMonth: string | null | undefined;
 
 // Card maps are only created near the viewport and removed once far away, so scrolling
 // through hundreds of activities doesn't keep hundreds of Leaflet maps alive.
-const cardActivities = new Map<Element, FeedActivity>();
-const cardMaps = new Map<Element, ActivityMap>();
+const cardViews = new Map<Element, ActivityDetailsView>();
 const mapObserver = new IntersectionObserver(entries => {
   for (const entry of entries) {
     if (entry.isIntersecting) showMap(entry.target as HTMLElement);
@@ -96,21 +95,18 @@ function appendCard(activity: FeedActivity): void {
     lastMonth = month;
   }
 
-  const { card, mapElement } = createActivityCard(activity);
-  feed.append(card);
-  cardActivities.set(mapElement, activity);
-  mapObserver.observe(mapElement);
+  const view = createActivityDetailsView(activity, data.tileUrlQuery);
+  feed.append(view.card);
+  cardViews.set(view.mapElement, view);
+  mapObserver.observe(view.mapElement);
 }
 
 function showMap(element: HTMLElement): void {
-  const activity = cardActivities.get(element);
-  if (!activity || cardMaps.has(element)) return;
-  cardMaps.set(element, showActivityMap(element, activity, data.tileUrlQuery));
+  cardViews.get(element)?.showMap();
 }
 
 function hideMap(element: Element): void {
-  cardMaps.get(element)?.destroy();
-  cardMaps.delete(element);
+  cardViews.get(element)?.hideMap();
 }
 
 if (data.pageUrls.length === 0) setStatus('done');

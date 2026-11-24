@@ -11,12 +11,18 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
         public static string BuildHtml(
             string weeksJs,
             string seriesByTypeJs,
-            List<(string Type, string Color)> categories)
+            string activitiesJs,
+            List<(string Type, string Color)> categories,
+            string activityDetailsUrl,
+            string? cartoApiKey)
         {
             return new PageDataBuilder()
                 .AddRaw("weeks", weeksJs)
                 .AddRaw("seriesByType", seriesByTypeJs)
+                .AddRaw("activities", activitiesJs)
                 .Add("activityTypes", categories.Select(c => new { c.Type, c.Color }))
+                .Add("activityDetailsUrl", activityDetailsUrl)
+                .Add("tileUrlQuery", string.IsNullOrWhiteSpace(cartoApiKey) ? "" : "?key=" + Uri.EscapeDataString(cartoApiKey))
                 .ApplyTo(HtmlTemplateLoader.Load("Features/Charts/WeeklyMileage", "weeklymileage.html"));
         }
     }

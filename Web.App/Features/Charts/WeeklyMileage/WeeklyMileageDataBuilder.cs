@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
@@ -39,8 +40,16 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             /// order, even if a category has zero activities in this dataset.</summary>
             public string SeriesByTypeJs = "{}";
 
+            /// <summary>JSON activity summaries for the dated activities shown by the chart.</summary>
+            public string ActivitiesJs = "[]";
+
             public int SkippedForMissingDate;
         }
+
+        private static readonly JsonSerializerOptions SerializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public static Result Build(IEnumerable<ActivityTrack> tracks)
         {
@@ -82,6 +91,7 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             {
                 WeeksJs = BuildWeeksJs(weeks),
                 SeriesByTypeJs = BuildSeriesJs(seriesByCategory),
+                ActivitiesJs = BuildActivitiesJs(dated),
                 SkippedForMissingDate = skipped
             };
         }
@@ -129,6 +139,27 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             }
             sb.Append("}");
             return sb.ToString();
+        }
+
+        private static string BuildActivitiesJs(List<ActivityTrack> activities)
+        {
+            var summaries = activities
+                .OrderBy(t => t.ActivityDate)
+                .ThenBy(t => t.ActivityId, StringComparer.Ordinal)
+                .Select(t =>
+                {
+                    var date = t.ActivityDate!.Value;
+                    return new
+                    {
+                        Id = t.ActivityId,
+                        t.Type,
+                        Category = ActivityCategory.CategoryForType(t.Type),
+                        Date = date.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),
+                        Week = StartOfWeek(date).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        HasDetails = t.Segments.Count > 0
+                    };
+                });
+            return JsonSerializer.Serialize(summaries, SerializerOptions);
         }
 
         private static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";

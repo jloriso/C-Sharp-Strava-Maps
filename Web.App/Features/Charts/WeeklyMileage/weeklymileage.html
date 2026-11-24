@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <title>Weekly Mileage</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <div id="page">
@@ -33,20 +35,16 @@
             </div>
             <div class="chart-footer"><span id="total-bike"></span><output class="visible-year" id="year-bike"></output></div>
         </section>
-        <section class="chart-panel">
-            <div class="chart-heading"><h2>Other</h2><output class="chart-range" id="range-other"></output></div>
-            <div class="chart-canvas"><canvas id="chart-other"></canvas></div>
-            <div class="controls-row">
-                <button type="button" class="nav-btn" id="btn-start-other" title="Jump to the first week">&laquo; Start</button>
-                <button type="button" class="nav-btn" id="btn-older-other">&lsaquo; Older</button>
-                <input type="range" class="week-slider" id="week-slider-other" min="0" max="0" value="0" step="1" aria-label="Other date window" />
-                <button type="button" class="nav-btn" id="btn-newer-other">Newer &rsaquo;</button>
-                <button type="button" class="nav-btn" id="btn-latest-other" title="Jump to the latest week">Latest &raquo;</button>
-            </div>
-            <div class="chart-footer"><span id="total-other"></span><output class="visible-year" id="year-other"></output></div>
-        </section>
     </div>
     <div id="chart-message"></div>
+    <dialog id="week-dialog" class="week-dialog" aria-labelledby="week-dialog-title">
+        <div class="week-dialog-header">
+            <h2 id="week-dialog-title"></h2>
+            <button id="week-dialog-close" type="button" class="week-dialog-close" aria-label="Close">&times;</button>
+        </div>
+        <p id="week-activities-empty" class="week-activities-empty" hidden>No activities this week.</p>
+        <div id="week-activities" class="week-activities"></div>
+    </dialog>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>

@@ -1,5 +1,6 @@
 import type { Chart as ChartJs } from 'chart.js';
 import './weeklymileage.css';
+import { createActivityDetailsView, type ActivityDetailsView, type FeedActivity } from '../../Activities/Shared/activityCard';
 import { readPageData } from '../../Shared/pageData';
 import { getElement, toTypeColorLookup, type ActivityTypeColor } from '../../Shared/types';
 
@@ -14,15 +15,30 @@ interface WeeklyMileagePageData {
   weeks: string[];
   /** Miles per week by category, each index-aligned with `weeks`. */
   seriesByType: Record<string, number[]>;
+  activities: WeekActivity[];
   activityTypes: ActivityTypeColor[];
+  activityDetailsUrl: string;
+  tileUrlQuery: string;
+}
+
+interface WeekActivity {
+  id: string;
+  type: string;
+  category: string;
+  date: string;
+  week: string;
+  hasDetails: boolean;
 }
 
 const WINDOW_WEEKS = 26;
 const STEP_WEEKS = 12;
-const chartTypes = ['Run', 'Bike', 'Other'];
+const chartTypes = ['Run', 'Bike'];
 
-const { weeks, seriesByType, activityTypes } = readPageData<WeeklyMileagePageData>();
+const { weeks, seriesByType, activities, activityTypes, activityDetailsUrl, tileUrlQuery } =
+  readPageData<WeeklyMileagePageData>();
 const typeColors = toTypeColorLookup(activityTypes);
+const activityViews: ActivityDetailsView[] = [];
+let weekRequest = 0;
 
 function showMessage(text: string): void {
   getElement('chart-grid').style.display = 'none';
@@ -34,6 +50,76 @@ function showMessage(text: string): void {
 const formatWeekLabel = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
+function clearWeekActivities(): void {
+  activityViews.forEach(view => view.destroy());
+  activityViews.length = 0;
+  getElement('week-activities').replaceChildren();
+}
+
+function activitySummary(activity: WeekActivity, message: string): HTMLElement {
+  const summary = document.createElement('p');
+  summary.className = 'week-activity-summary';
+  const date = new Date(activity.date);
+  const formattedDate = date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  summary.textContent = `${activity.type} · ${formattedDate} — ${message}`;
+  return summary;
+}
+
+async function showWeekActivities(week: string, category: string): Promise<void> {
+  const dialog = getElement<HTMLDialogElement>('week-dialog');
+  const title = getElement('week-dialog-title');
+  const list = getElement('week-activities');
+  const emptyMessage = getElement('week-activities-empty');
+  const currentRequest = ++weekRequest;
+  clearWeekActivities();
+
+  const start = new Date(`${week}T00:00:00`);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const dateOptions: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+  title.textContent = `${category} · ${start.toLocaleDateString(undefined, dateOptions)} – ${end.toLocaleDateString(undefined, dateOptions)}`;
+
+  const weekActivities = activities
+    .filter(activity => activity.week === week && activity.category === category)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  emptyMessage.hidden = weekActivities.length > 0;
+  if (!dialog.open) dialog.showModal();
+  if (weekActivities.length === 0) return;
+
+  list.textContent = 'Loading activities…';
+  const results = await Promise.all(weekActivities.map(async activity => {
+    if (!activity.hasDetails) return { activity, detail: null, error: null };
+    try {
+      const response = await fetch(activityDetailsUrl.replace('{id}', encodeURIComponent(activity.id)));
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return { activity, detail: await response.json() as FeedActivity, error: null };
+    } catch (error) {
+      return { activity, detail: null, error };
+    }
+  }));
+  if (currentRequest !== weekRequest) return;
+
+  list.replaceChildren();
+  for (const result of results) {
+    if (result.error) {
+      console.error(`Failed to load activity ${result.activity.id}`, result.error);
+      list.append(activitySummary(result.activity, "Couldn't load activity details."));
+    } else if (result.detail) {
+      const view = createActivityDetailsView(result.detail, tileUrlQuery);
+      activityViews.push(view);
+      list.append(view.card);
+      view.showMap();
+    } else {
+      list.append(activitySummary(result.activity, 'Route map unavailable.'));
+    }
+  }
+}
+
 function createChartPanel(ChartCtor: typeof ChartJs, type: string, maxStart: number): void {
   const key = type.toLowerCase();
   const series = seriesByType[type] ?? [];
@@ -41,6 +127,7 @@ function createChartPanel(ChartCtor: typeof ChartJs, type: string, maxStart: num
   const visibleSlice = <T>(values: T[]) => values.slice(windowStart, windowStart + WINDOW_WEEKS);
 
   const canvas = getElement<HTMLCanvasElement>(`chart-${key}`);
+  canvas.title = 'Select a week to view its activities';
   const chart = new ChartCtor(canvas, {
     type: 'bar',
     data: {
@@ -63,6 +150,12 @@ function createChartPanel(ChartCtor: typeof ChartJs, type: string, maxStart: num
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: item => `${(item.parsed.y ?? 0).toFixed(1)} mi` } },
+      },
+      onClick: (event, _activeElements, currentChart) => {
+        if (!event.native) return;
+        const [point] = currentChart.getElementsAtEventForMode(event.native, 'index', { intersect: false }, false);
+        const week = point ? visibleSlice(weeks)[point.index] : undefined;
+        if (week) void showWeekActivities(week, type);
       },
     },
   });
@@ -118,4 +211,14 @@ if (!ChartCtor) {
 } else {
   const maxStart = Math.max(0, weeks.length - WINDOW_WEEKS);
   chartTypes.forEach(type => createChartPanel(ChartCtor, type, maxStart));
+
+  const dialog = getElement<HTMLDialogElement>('week-dialog');
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('close', () => {
+    weekRequest++;
+    clearWeekActivities();
+  });
+  getElement<HTMLButtonElement>('week-dialog-close').addEventListener('click', () => dialog.close());
 }

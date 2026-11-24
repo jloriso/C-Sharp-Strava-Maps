@@ -173,7 +173,8 @@ namespace GpxWorldMap
                 Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
                                   "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
             var weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
-                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors);
+                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, weeklyMileage.ActivitiesJs, categoryColors,
+                ActivityFeedDataBuilder.ActivityUrlTemplate, config.CartoApiKey);
             string mapsHtml = MapSwitcherHtmlBuilder.BuildHtml(
                 heatmapHref, lineMapHref);
 

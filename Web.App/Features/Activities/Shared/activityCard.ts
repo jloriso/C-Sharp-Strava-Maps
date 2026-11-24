@@ -31,9 +31,38 @@ export interface ActivityMap {
   destroy(): void;
 }
 
+export interface ActivityDetailsView {
+  card: HTMLElement;
+  mapElement: HTMLElement;
+  showMap(): void;
+  hideMap(): void;
+  destroy(): void;
+}
+
 const metersPerMile = 1609.344;
 /** Activity types (besides the Run category) shown with a pace rather than a speed. */
 const paceTypes = new Set(['Walk', 'Hike']);
+
+/** Creates the shared activity card and manages its route map lifecycle. */
+export function createActivityDetailsView(activity: FeedActivity, tileUrlQuery: string): ActivityDetailsView {
+  const { card, mapElement } = createActivityCard(activity);
+  let activityMap: ActivityMap | null = null;
+
+  function hideMap(): void {
+    activityMap?.destroy();
+    activityMap = null;
+  }
+
+  return {
+    card,
+    mapElement,
+    showMap() {
+      if (!activityMap) activityMap = showActivityMap(mapElement, activity, tileUrlQuery);
+    },
+    hideMap,
+    destroy: hideMap,
+  };
+}
 
 /** Builds an activity card: title, date, description, stats, gear, and a map container. */
 export function createActivityCard(activity: FeedActivity): ActivityCard {
