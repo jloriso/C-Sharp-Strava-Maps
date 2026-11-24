@@ -1,4 +1,4 @@
-import type { LatLng } from './types';
+import type { BaseLayerId, LatLng } from './types';
 
 /** Messages exchanged between the map pages and the MapSwitcher page that hosts them in iframes. */
 
@@ -31,19 +31,26 @@ export interface ActivityTypesMessage {
   hiddenTypes: string[];
 }
 
+/** Map page -> parent: the selected basemap changed. */
+export interface BaseLayerMessage {
+  type: 'gpxworldmap-base-layer';
+  baseLayer: BaseLayerId;
+}
+
 /** Map page -> parent: a SetMapStateMessage has been applied and the map has rendered it. */
 export interface MapStateAppliedMessage {
   type: 'gpxworldmap-map-state-applied';
   requestId: number;
 }
 
-/** Parent -> map page: apply the timeline position and view of the previously shown map. */
+/** Parent -> map page: apply the state of the previously shown map. */
 export interface SetMapStateMessage extends TimelinePosition {
   type: 'gpxworldmap-set-map-state';
   requestId: number;
   center: LatLng | null;
   zoom: number | null;
   hiddenTypes: string[];
+  baseLayer: BaseLayerId | null;
 }
 
 export type MapPageMessage =
@@ -51,6 +58,7 @@ export type MapPageMessage =
   | TimelinePositionMessage
   | MapViewMessage
   | ActivityTypesMessage
+  | BaseLayerMessage
   | MapStateAppliedMessage;
 
 export const isEmbedded = (): boolean => window.self !== window.top;

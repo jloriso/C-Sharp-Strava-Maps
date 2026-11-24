@@ -1,5 +1,5 @@
 import './ActivityDetailsControl.css';
-import { createActivityCard, showActivityMap, type ActivityMap, type FeedActivity } from '../../Activities/Shared/activityCard';
+import { createActivityDetailsView, type ActivityDetailsView, type FeedActivity } from '../../Activities/Shared/activityCard';
 
 export interface ActivityDetailsControl {
   /** Opens the dialog and loads the activity's details (the same card as the Activities page). */
@@ -27,7 +27,7 @@ export function createActivityDetailsControl(urlTemplate: string, tileUrlQuery: 
   dialog.append(close, body);
   document.body.append(dialog);
 
-  let activityMap: ActivityMap | null = null;
+  let activityView: ActivityDetailsView | null = null;
   let request = 0;
 
   // Clicks on the backdrop land on the <dialog> element itself; clicks on content don't.
@@ -36,8 +36,8 @@ export function createActivityDetailsControl(urlTemplate: string, tileUrlQuery: 
   });
   dialog.addEventListener('close', () => {
     request++;
-    activityMap?.destroy();
-    activityMap = null;
+    activityView?.destroy();
+    activityView = null;
     body.replaceChildren();
   });
 
@@ -59,9 +59,9 @@ export function createActivityDetailsControl(urlTemplate: string, tileUrlQuery: 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const activity = await response.json() as FeedActivity;
       if (current !== request) return;
-      const { card, mapElement } = createActivityCard(activity);
-      body.replaceChildren(card);
-      activityMap = showActivityMap(mapElement, activity, tileUrlQuery);
+      activityView = createActivityDetailsView(activity, tileUrlQuery);
+      body.replaceChildren(activityView.card);
+      activityView.showMap();
     } catch (error) {
       if (current !== request) return;
       console.error('Failed to load activity details', error);
@@ -71,8 +71,8 @@ export function createActivityDetailsControl(urlTemplate: string, tileUrlQuery: 
 
   return {
     open(activityId) {
-      activityMap?.destroy();
-      activityMap = null;
+      activityView?.destroy();
+      activityView = null;
       const current = ++request;
       showMessage('Loading activity…', true);
       if (!dialog.open) dialog.showModal();

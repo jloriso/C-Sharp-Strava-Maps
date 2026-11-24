@@ -12,6 +12,12 @@ export interface MapLocation {
 
 export type MapKind = 'heatmap' | 'linemap';
 
+export const baseLayerIds = ['light', 'streets', 'dark', 'satellite'] as const;
+export type BaseLayerId = typeof baseLayerIds[number];
+
+export const isBaseLayerId = (value: unknown): value is BaseLayerId =>
+  baseLayerIds.some(id => id === value);
+
 export interface LatLng {
   lat: number;
   lng: number;

@@ -25,7 +25,7 @@ interface HeatmapPageData {
 }
 
 const { undatedPointsByType, timelineActivities, settings } = readPageData<HeatmapPageData>();
-const map = createBaseMap(settings);
+const { map, baseLayerControl } = createBaseMap(settings);
 
 const heatOptions: HeatMapOptions = {
   radius: 8,
@@ -66,4 +66,4 @@ const activityTypeControl = addActivityTypeControl(map, settings.activityTypes, 
 });
 addHomeControl(map, settings.homeUrl);
 const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
-listenForMapState(map, timeline, activityTypeControl);
+listenForMapState(map, timeline, activityTypeControl, baseLayerControl);

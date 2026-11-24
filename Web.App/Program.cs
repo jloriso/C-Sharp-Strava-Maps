@@ -50,17 +50,21 @@ namespace GpxWorldMap
                 return 1;
             }
 
-            var (activitiesByFilenameId, activitiesByActivityId) = LoadActivities(config.CsvFile);
+            var (activitiesByFilenameId, activitiesByActivityId, csvActivities) = LoadActivities(config.CsvFile);
             if (config.CsvFile != null && activitiesByFilenameId == null)
                 return 1; // LoadActivities already printed the error
+            var csvRecords = csvActivities ?? new List<ActivityRecord>();
 
             var files = FindActivityFiles(config.GpxFolder);
-            if (files.Length == 0)
+            if (files.Length == 0 && csvRecords.Count == 0)
             {
                 Console.WriteLine($"No .gpx.gz, .tcx.gz, or .fit.gz files found in {config.GpxFolder}");
                 return 1;
             }
-            Console.WriteLine($"Found {files.Length} activity file(s) in {config.GpxFolder}");
+            if (files.Length > 0)
+                Console.WriteLine($"Found {files.Length} activity file(s) in {config.GpxFolder}");
+            else
+                Console.WriteLine("No activity files found; weekly mileage will use the CSV activity rows.");
 
             var tracks = new List<ActivityTrack>();
             var matchedIds = new HashSet<string>();
@@ -135,9 +139,10 @@ namespace GpxWorldMap
             if (config.CsvFile != null)
                 PrintMatchSummary(activitiesByFilenameId!, activitiesByActivityId!, matchedIds, unmatchedGpxCount);
 
-            if (tracks.Count == 0)
+            var weeklyMileageTracks = BuildWeeklyMileageTracks(tracks, csvRecords);
+            if (tracks.Count == 0 && !weeklyMileageTracks.Any(track => track.ActivityDate.HasValue))
             {
-                Console.WriteLine("No usable track points/waypoints found across all files.");
+                Console.WriteLine("No usable track points or dated CSV activities found.");
                 return 1;
             }
 
@@ -168,12 +173,13 @@ namespace GpxWorldMap
                 categoryColors, locations, config.CartoApiKey, ActivityFeedDataBuilder.ActivityUrlTemplate);
 
             Console.WriteLine("Building weekly mileage chart...");
-            var weeklyMileage = WeeklyMileageDataBuilder.Build(tracks);
+            var weeklyMileage = WeeklyMileageDataBuilder.Build(weeklyMileageTracks);
             if (weeklyMileage.SkippedForMissingDate > 0)
                 Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
                                   "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
             var weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
-                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, categoryColors);
+                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, weeklyMileage.ActivitiesJs, categoryColors,
+                ActivityFeedDataBuilder.ActivityUrlTemplate, config.CartoApiKey);
             string mapsHtml = MapSwitcherHtmlBuilder.BuildHtml(
                 heatmapHref, lineMapHref);
 
@@ -183,7 +189,7 @@ namespace GpxWorldMap
             string activitiesHtml = ActivityFeedHtmlBuilder.BuildHtml(feed.TotalActivities, feedPageUrls, config.CartoApiKey);
             string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
             {
-                ("weeklymileage", "Weekly Mileage", weeklyMileageHref),
+                ("weeklymileage", "Charts", weeklyMileageHref),
                 ("maps", "Maps", mapsHref),
                 ("activities", "Activities", activitiesHref)
             }, "weeklymileage");
@@ -238,18 +244,21 @@ namespace GpxWorldMap
             throw new InvalidOperationException("Unrecognized activity file extension.");
         }
 
-        private static (Dictionary<string, ActivityRecord>?, Dictionary<string, ActivityRecord>?) LoadActivities(string? csvFile)
+        private static (
+            Dictionary<string, ActivityRecord>?,
+            Dictionary<string, ActivityRecord>?,
+            List<ActivityRecord>?) LoadActivities(string? csvFile)
         {
             var byFilenameId = new Dictionary<string, ActivityRecord>();
             var byActivityId = new Dictionary<string, ActivityRecord>();
 
             if (csvFile == null)
-                return (byFilenameId, byActivityId);
+                return (byFilenameId, byActivityId, new List<ActivityRecord>());
 
             if (!File.Exists(csvFile))
             {
                 Console.WriteLine($"CSV file not found: {csvFile}");
-                return (null, null);
+                return (null, null, null);
             }
 
             var records = CsvReader.ParseActivitiesCsv(csvFile);
@@ -262,7 +271,74 @@ namespace GpxWorldMap
                     byActivityId[r.Id] = r;
             }
             Console.WriteLine($"Loaded {records.Count} activities from {csvFile}");
-            return (byFilenameId, byActivityId);
+            return (byFilenameId, byActivityId, records);
+        }
+
+        private static List<ActivityTrack> BuildWeeklyMileageTracks(
+            IEnumerable<ActivityTrack> tracks,
+            IEnumerable<ActivityRecord> csvRecords)
+        {
+            var result = tracks.ToList();
+            var tracksById = new Dictionary<string, ActivityTrack>(StringComparer.Ordinal);
+            foreach (var track in result.OrderByDescending(track => track.Segments.Count > 0))
+                tracksById.TryAdd(track.ActivityId, track);
+
+            var processed = new HashSet<string>(StringComparer.Ordinal);
+            int rowIndex = 0;
+            foreach (var record in csvRecords)
+            {
+                string filenameId = CsvReader.ExtractIdFromFilename(record.Filename);
+                string identity = !string.IsNullOrWhiteSpace(record.Id)
+                    ? record.Id
+                    : !string.IsNullOrWhiteSpace(filenameId) ? filenameId : $"row-{rowIndex}";
+                rowIndex++;
+                if (!processed.Add(identity)) continue;
+
+                tracksById.TryGetValue(filenameId, out var filenameTrack);
+                tracksById.TryGetValue(record.Id, out var activityIdTrack);
+                var matchedTrack = filenameTrack?.Segments.Count > 0
+                    ? filenameTrack
+                    : activityIdTrack?.Segments.Count > 0
+                        ? activityIdTrack
+                        : filenameTrack ?? activityIdTrack;
+                if (matchedTrack?.Segments.Count > 0) continue;
+
+                string activityId = matchedTrack?.ActivityId
+                    ?? (!string.IsNullOrWhiteSpace(filenameId) ? filenameId
+                        : !string.IsNullOrWhiteSpace(record.Id) ? record.Id
+                        : $"csv-activity-{rowIndex}");
+                string type = string.IsNullOrWhiteSpace(record.Type) ? "Unknown" : record.Type;
+                string category = ActivityCategory.CategoryForType(type);
+                var activity = new ActivityTrack
+                {
+                    ActivityId = activityId,
+                    Name = string.IsNullOrWhiteSpace(record.Name) ? activityId : record.Name,
+                    Type = type,
+                    Description = record.Description,
+                    Gear = record.Gear,
+                    Color = ActivityCategory.ColorForCategory(category),
+                    ActivityDate = ParseActivityDate(record.Date),
+                    DistanceMeters = ParseActivityDistanceMeters(record.Distance) ?? matchedTrack?.DistanceMeters ?? 0,
+                    ElapsedSeconds = ParseSeconds(record.ElapsedTime),
+                    MovingSeconds = ParseSeconds(record.MovingTime)
+                };
+
+                if (matchedTrack != null)
+                    result.RemoveAll(track => track.ActivityId == matchedTrack.ActivityId && track.Segments.Count == 0);
+                result.Add(activity);
+                tracksById[activityId] = activity;
+            }
+
+            return result;
+        }
+
+        private static double? ParseActivityDistanceMeters(string distance)
+        {
+            // Strava's activities.csv exports Distance in kilometers; the chart converts meters to miles.
+            if (!double.TryParse(distance, NumberStyles.Float, CultureInfo.InvariantCulture, out var kilometers)
+                && !double.TryParse(distance, NumberStyles.Float, CultureInfo.CurrentCulture, out kilometers))
+                return null;
+            return double.IsFinite(kilometers) && kilometers >= 0 ? kilometers * 1000 : null;
         }
 
         /// <summary>Reads shoes.csv from the activities CSV's folder (where Strava's

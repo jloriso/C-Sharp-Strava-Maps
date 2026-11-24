@@ -2,7 +2,7 @@ import './maps.css';
 import { createMapTypeControl } from '../../Controls/MapType/MapTypeControl';
 import { isValidLatLng, postToFrame, type MapPageMessage, type SetMapStateMessage } from '../../Shared/messages';
 import { readPageData } from '../../Shared/pageData';
-import { getElement, type MapKind } from '../../Shared/types';
+import { getElement, isBaseLayerId, type MapKind } from '../../Shared/types';
 
 /** Mirrors MapSwitcherHtmlBuilder.cs. */
 interface MapSwitcherPageData {
@@ -26,9 +26,9 @@ const stage = getElement('map-stage');
 const mapUrls: Record<MapKind, string> = { heatmap: data.heatmapHref, linemap: data.linemapHref };
 const mapTitles: Record<MapKind, string> = { heatmap: 'Heatmap', linemap: 'Line Map' };
 
-/** Timeline position, view, and activity type selection of the visible map, carried over on switch. */
+/** Timeline, view, activity type, and basemap selection carried over when switching maps. */
 const state: Omit<SetMapStateMessage, 'type' | 'requestId'> =
-  { count: 0, date: null, center: null, zoom: null, hiddenTypes: [] };
+  { count: 0, date: null, center: null, zoom: null, hiddenTypes: [], baseLayer: null };
 const frames = new Map<MapKind, MapFrame>();
 let activeKind: MapKind = 'linemap';
 let targetKind: MapKind | null = null;
@@ -122,6 +122,9 @@ window.addEventListener('message', (event: MessageEvent<MapPageMessage>) => {
   } else if (message.type === 'gpxworldmap-activity-types') {
     if (!Array.isArray(message.hiddenTypes)) return;
     state.hiddenTypes = message.hiddenTypes.filter(type => typeof type === 'string');
+  } else if (message.type === 'gpxworldmap-base-layer') {
+    if (!isBaseLayerId(message.baseLayer)) return;
+    state.baseLayer = message.baseLayer;
   }
 
   // The visible map changed while the target was still preparing; resend the latest state.
