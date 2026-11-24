@@ -11,7 +11,6 @@ namespace GpxWorldMap.Models
         public string Type = "";
         public string Date = "";
         public string Description = "";
-        public string Color = "#3388ff";
         public double? ElapsedSeconds;
         public double? MovingSeconds;
         public string Gear = "";

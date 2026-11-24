@@ -1,0 +1,6 @@
+[
+  { "name": "Chicago", "lat": 41.9, "lon": -87.64, "zoom": 11 },
+  { "name": "Kalamazoo", "lat": 42.2, "lon": -85.6, "zoom": 12 },
+  { "name": "USA", "lat": 38.0, "lon": -94.8, "zoom": 5 },
+  { "name": "World", "lat": 20.0, "lon": 0.0, "zoom": 3 }
+]

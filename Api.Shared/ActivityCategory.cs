@@ -3,12 +3,10 @@
     /// <summary>
     /// Collapses the many raw Strava/Garmin activity type strings (Run, TrailRun,
     /// Ride, VirtualRide, GravelRide, MountainBikeRide, Swim, Hike, Yoga, ...) down to
-    /// three broad categories -- Run, Bike, Other -- used by the weekly mileage chart.
-    /// The heatmap and line map still use the full per-type granularity via
-    /// ActivityColors; this simplification is specific to the mileage chart, where
-    /// three fixed, always-present categories make for a clean, predictable set of
-    /// checkboxes/stacked-bar segments regardless of how many distinct raw types show
-    /// up in any given dataset.
+    /// three broad categories -- Run, Bike, Other -- used by the maps, weekly mileage
+    /// chart, and activity feed. Three fixed, always-present categories make for a
+    /// clean, predictable set of checkboxes/stacked-bar segments regardless of how many
+    /// distinct raw types show up in any given dataset.
     /// </summary>
     public static class ActivityCategory
     {

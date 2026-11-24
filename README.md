@@ -134,7 +134,7 @@ Api.Config/                                 # config models and CLI/config loadi
 Api.FileReader/FileTypeReaders/             # CSV, GPX, TCX, FIT, and gzip readers
 Api.Models/                                 # activity metadata, tracks, parsed geometry
 Api.Shared/                                 # activity IDs, categories, distance, locations
-Web.Rendering/                              # HTML template loader and map rendering helpers
+Web.Rendering/                              # HTML template loader and page data builder
 Web.Server/                                 # local HTTP server and browser launch
 Web.App/package.json, tsconfig.json         # frontend (TypeScript + Vite) build
 Web.App/vite.config.ts                      # shared Vite config (single-file HTML output)
@@ -174,7 +174,9 @@ the npm step.
 
 ### Tuning
 
-- Edit the preset views in `Api.Shared/DefaultLocations.cs`.
+- Edit the preset "Jump to" views in
+  `Web.App/Features/Controls/Bookmark/bookmarks.json` (the first one is where maps
+  load into). `BookmarkStore` loads and saves this file.
 - Change heatmap rounding and weight clipping in `HeatmapDataBuilder.Build(...)`.
 - Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
 - Change the mileage chart window and navigation step in

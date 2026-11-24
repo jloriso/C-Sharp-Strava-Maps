@@ -8,6 +8,7 @@ using GpxWorldMap.Server;
 using GpxWorldMap.Shared;
 using GpxWorldMap.Web.Features.Activities.ActivityFeed;
 using GpxWorldMap.Web.Features.Charts.WeeklyMileage;
+using GpxWorldMap.Web.Features.Controls.Bookmark;
 using GpxWorldMap.Web.Features.Maps.Heatmap;
 using GpxWorldMap.Web.Features.Maps.Linemap;
 using GpxWorldMap.Web.Features.Maps.MapSwitcher;
@@ -99,7 +100,6 @@ namespace GpxWorldMap
                         Gear = meta.Gear,
                         ElapsedSeconds = meta.ElapsedSeconds,
                         MovingSeconds = meta.MovingSeconds,
-                        Color = meta.Color,
                         ActivityDate = ParseActivityDate(meta.Date)
                     };
 
@@ -152,7 +152,7 @@ namespace GpxWorldMap
             var categoryColors = ActivityCategory.OrderedCategories
                 .Select(c => (Type: c, Color: ActivityCategory.ColorForCategory(c))).ToList();
 
-            var locations = DefaultLocations.Standard();
+            var locations = BookmarkStore.Load();
 
             // The index shell owns navigation; generated pages are loaded into its iframe.
             string heatmapHref = Path.GetFileName(config.OutputHeatmapHtml);
@@ -373,7 +373,6 @@ namespace GpxWorldMap
                 meta.Gear = record.Gear;
             }
 
-            meta.Color = ActivityColors.ColorForType(meta.Type);
             return meta;
         }
 

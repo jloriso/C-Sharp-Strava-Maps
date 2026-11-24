@@ -17,6 +17,10 @@
     <ProjectReference Include="..\Web.Server\Web.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Features\Controls\Bookmark\bookmarks.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!--
     Client-side pages (TypeScript + Vite). Sources live next to each feature
     (Index/, Features/**); `npm run build` type-checks them and emits one
