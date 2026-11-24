@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace GpxWorldMap.Processing
+namespace Api.Processing
 {
     /// <summary>Joins already-serialized JSON values into one JSON object without
     /// re-parsing them (the values can be tens of MB).</summary>

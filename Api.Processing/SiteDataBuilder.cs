@@ -1,9 +1,9 @@
-using GpxWorldMap.Processing.ActivityFeed;
-using GpxWorldMap.Processing.Heatmap;
-using GpxWorldMap.Processing.Linemap;
-using GpxWorldMap.Processing.WeeklyMileage;
+using Api.Processing.ActivityFeed;
+using Api.Processing.Heatmap;
+using Api.Processing.Linemap;
+using Api.Processing.WeeklyMileage;
 
-namespace GpxWorldMap.Processing
+namespace Api.Processing
 {
     /// <summary>Finished, serialized data for every page; the web layer only wraps
     /// it in HTML shells and serves it.</summary>

@@ -2,10 +2,10 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using GpxWorldMap.Models;
-using GpxWorldMap.Shared;
+using Api.Models;
+using Api.Shared;
 
-namespace GpxWorldMap.Processing.Linemap
+namespace Api.Processing.Linemap
 {
     /// <summary>
     /// Builds the "well-worn route" line data for the line map, one FeatureCollection

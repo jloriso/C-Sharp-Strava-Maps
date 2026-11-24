@@ -1,7 +1,7 @@
 using System.Text;
-using GpxWorldMap.Models;
+using Api.Models;
 
-namespace GpxWorldMap.FileInterpreter
+namespace Api.FileReader
 {
     /// <summary>
     /// On-disk cache of parsed activity files, so unchanged .gpx.gz/.tcx.gz/.fit.gz files

@@ -1,6 +1,6 @@
-using GpxWorldMap.Rendering;
+using Web.Rendering;
 
-namespace GpxWorldMap.Web.Features.Activities.ActivityFeed
+namespace Web.App.Features.Activities.ActivityFeed
 {
     /// <summary>Builds the Activities feed page by loading the built activities.html
     /// (from activities.html + activities.ts) and injecting the feed settings. The

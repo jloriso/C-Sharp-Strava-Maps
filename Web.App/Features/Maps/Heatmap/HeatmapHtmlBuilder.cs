@@ -1,8 +1,8 @@
-using GpxWorldMap.Models;
-using GpxWorldMap.Rendering;
-using GpxWorldMap.Web.Features.Maps.Shared;
+using Api.Models;
+using Web.Rendering;
+using Web.App.Features.Maps.Shared;
 
-namespace GpxWorldMap.Web.Features.Maps.Heatmap
+namespace Web.App.Features.Maps.Heatmap
 {
     /// <summary>Builds the standalone heatmap page by loading the built heatmap.html
     /// (from heatmap.html + heatmap.ts) and injecting its settings. The data file the

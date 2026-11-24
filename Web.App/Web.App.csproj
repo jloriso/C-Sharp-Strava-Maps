@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <RollForward>LatestMajor</RollForward>
     <AssemblyName>GpxWorldMap</AssemblyName>
-    <RootNamespace>GpxWorldMap</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 

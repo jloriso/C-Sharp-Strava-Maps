@@ -1,10 +1,10 @@
 using System.Globalization;
-using GpxWorldMap.FileInterpreter;
-using GpxWorldMap.FileInterpreter.FileTypeReaders;
-using GpxWorldMap.Models;
-using GpxWorldMap.Shared;
+using Api.FileReader;
+using Api.FileReader.FileTypeReaders;
+using Api.Models;
+using Api.Shared;
 
-namespace GpxWorldMap.Processing
+namespace Api.Processing
 {
     /// <summary>Everything the page data builders need, produced by ActivityIngestion.</summary>
     public sealed class IngestedActivities

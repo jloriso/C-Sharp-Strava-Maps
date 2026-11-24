@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace GpxWorldMap.Server
+namespace Web.Server
 {
     /// <summary>Serves the generated pages over http://localhost and opens the home
     /// page in the default browser. Serving locally (rather than opening the HTML

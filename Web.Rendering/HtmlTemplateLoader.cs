@@ -1,4 +1,4 @@
-﻿namespace GpxWorldMap.Rendering
+﻿namespace Web.Rendering
 {
     /// <summary>
     /// Loads a built HTML page template from the application's output directory

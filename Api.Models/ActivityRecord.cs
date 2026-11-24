@@ -1,4 +1,4 @@
-namespace GpxWorldMap.Models
+namespace Api.Models
 {
     /// <summary>One row from the activities CSV (only the columns we actually use).
     /// ElapsedTime/MovingTime are the raw seconds values ("" when the column is absent);

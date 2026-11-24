@@ -1,7 +1,7 @@
 using System.Text.Json;
-using GpxWorldMap.Models;
+using Api.Models;
 
-namespace GpxWorldMap.Web.Features.Controls.Bookmark
+namespace Web.App.Features.Controls.Bookmark
 {
     /// <summary>
     /// Reads and writes the "Jump to" locations shown by BookmarkControl.ts on the heatmap

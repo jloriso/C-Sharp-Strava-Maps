@@ -1,4 +1,4 @@
-namespace GpxWorldMap.Models
+namespace Api.Models
 {
     /// <summary>One activity's parsed geometry plus the metadata (type/color/date/
     /// distance) needed by the heatmap, line map, and weekly mileage chart. Built

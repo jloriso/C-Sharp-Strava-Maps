@@ -1,6 +1,6 @@
-using GpxWorldMap.Rendering;
+using Web.Rendering;
 
-namespace GpxWorldMap.Web.Features.Maps.MapSwitcher
+namespace Web.App.Features.Maps.MapSwitcher
 {
     /// <summary>Builds the page that hosts the heatmap/line map in an iframe and
     /// switches between them. Mirrors MapSwitcherPageData in maps.ts.</summary>

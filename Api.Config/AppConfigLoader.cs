@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace GpxWorldMap.Config
+namespace Api.Config
 {
     public static class AppConfigLoader
     {

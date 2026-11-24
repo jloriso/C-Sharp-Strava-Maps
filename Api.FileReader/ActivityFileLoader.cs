@@ -1,7 +1,7 @@
-using GpxWorldMap.FileInterpreter.FileTypeReaders;
-using GpxWorldMap.Models;
+using Api.FileReader.FileTypeReaders;
+using Api.Models;
 
-namespace GpxWorldMap.FileInterpreter
+namespace Api.FileReader
 {
     /// <summary>
     /// Finds and parses every activity file in a folder. Files are parsed in parallel, and

@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Xml.Linq;
-using GpxWorldMap.Models;
+using Api.Models;
 
-namespace GpxWorldMap.FileInterpreter.FileTypeReaders
+namespace Api.FileReader.FileTypeReaders
 {
     /// <summary>Parses TCX XML (already decompressed) into tracks. TCX structures GPS
     /// data as Activity/Lap/Track/Trackpoint/Position/LatitudeDegrees+LongitudeDegrees;

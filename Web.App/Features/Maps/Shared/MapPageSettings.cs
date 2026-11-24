@@ -1,6 +1,6 @@
-using GpxWorldMap.Models;
+using Api.Models;
 
-namespace GpxWorldMap.Web.Features.Maps.Shared
+namespace Web.App.Features.Maps.Shared
 {
     /// <summary>Settings shared by the heatmap and line map pages. Mirrors the
     /// MapPageSettings interface in baseMap.ts.</summary>

@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace GpxWorldMap.Rendering
+namespace Web.Rendering
 {
     /// <summary>
     /// Builds the JSON object injected into a page's

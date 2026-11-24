@@ -1,18 +1,18 @@
 using System.Text;
-using GpxWorldMap.Config;
-using GpxWorldMap.Processing;
-using GpxWorldMap.Processing.ActivityFeed;
-using GpxWorldMap.Server;
-using GpxWorldMap.Shared;
-using GpxWorldMap.Web.Features.Activities.ActivityFeed;
-using GpxWorldMap.Web.Features.Charts.WeeklyMileage;
-using GpxWorldMap.Web.Features.Controls.Bookmark;
-using GpxWorldMap.Web.Features.Maps.Heatmap;
-using GpxWorldMap.Web.Features.Maps.Linemap;
-using GpxWorldMap.Web.Features.Maps.MapSwitcher;
-using GpxWorldMap.Web.Index;
+using Api.Config;
+using Api.Processing;
+using Api.Processing.ActivityFeed;
+using Api.Shared;
+using Web.App.Features.Activities.ActivityFeed;
+using Web.App.Features.Charts.WeeklyMileage;
+using Web.App.Features.Controls.Bookmark;
+using Web.App.Features.Maps.Heatmap;
+using Web.App.Features.Maps.Linemap;
+using Web.App.Features.Maps.MapSwitcher;
+using Web.App.Index;
+using Web.Server;
 
-namespace GpxWorldMap
+namespace Web.App
 {
     /// <summary>
     /// Loads activities and computes every page's data in Api.Processing

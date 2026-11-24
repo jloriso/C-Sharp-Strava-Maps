@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using GpxWorldMap.Models;
-using GpxWorldMap.Shared;
+using Api.Models;
+using Api.Shared;
 
-namespace GpxWorldMap.Processing.WeeklyMileage
+namespace Api.Processing.WeeklyMileage
 {
     /// <summary>
     /// Aggregates activities into total mileage per week, broken out into three fixed

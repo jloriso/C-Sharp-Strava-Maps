@@ -1,4 +1,4 @@
-namespace GpxWorldMap.Models
+namespace Api.Models
 {
     /// <summary>
     /// The metadata attached to a single activity -- either taken from a matched CSV

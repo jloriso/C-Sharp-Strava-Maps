@@ -1,8 +1,8 @@
-using GpxWorldMap.Models;
-using GpxWorldMap.Rendering;
-using GpxWorldMap.Web.Features.Maps.Shared;
+using Api.Models;
+using Web.Rendering;
+using Web.App.Features.Maps.Shared;
 
-namespace GpxWorldMap.Web.Features.Maps.Linemap
+namespace Web.App.Features.Maps.Linemap
 {
     /// <summary>Builds the standalone line map page by loading the built linemap.html
     /// (from linemap.html + linemap.ts) and injecting its settings. The data file the

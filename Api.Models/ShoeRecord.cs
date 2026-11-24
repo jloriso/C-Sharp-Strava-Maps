@@ -1,4 +1,4 @@
-namespace GpxWorldMap.Models
+namespace Api.Models
 {
     /// <summary>One row from the Strava export's shoes.csv.</summary>
     public record ShoeRecord(string Name, string Brand, string Model)

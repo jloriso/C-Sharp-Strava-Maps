@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Xml.Linq;
-using GpxWorldMap.Models;
+using Api.Models;
 
-namespace GpxWorldMap.FileInterpreter.FileTypeReaders
+namespace Api.FileReader.FileTypeReaders
 {
     /// <summary>Parses GPX XML (already decompressed) into tracks/routes/waypoints.</summary>
     public static class GpxReader

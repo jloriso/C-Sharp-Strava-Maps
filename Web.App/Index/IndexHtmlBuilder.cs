@@ -1,6 +1,6 @@
-using GpxWorldMap.Rendering;
+using Web.Rendering;
 
-namespace GpxWorldMap.Web.Index
+namespace Web.App.Index
 {
     /// <summary>Builds the root shell page (nav bar + content iframe). Mirrors
     /// IndexPageData in index.ts.</summary>

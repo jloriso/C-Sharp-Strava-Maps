@@ -1,6 +1,6 @@
-using GpxWorldMap.Rendering;
+using Web.Rendering;
 
-namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
+namespace Web.App.Features.Charts.WeeklyMileage
 {
     /// <summary>Builds the weekly mileage chart page by loading the built
     /// weeklymileage.html (from weeklymileage.html + weeklymileage.ts) and injecting the

@@ -1,4 +1,4 @@
-﻿namespace GpxWorldMap.Shared
+﻿namespace Api.Shared
 {
     /// <summary>Great-circle distance calculations between GPS coordinates, used to
     /// compute each activity's total mileage for the weekly mileage chart.</summary>

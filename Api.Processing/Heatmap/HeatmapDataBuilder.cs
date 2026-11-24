@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text.Json;
-using GpxWorldMap.Models;
-using GpxWorldMap.Shared;
+using Api.Models;
+using Api.Shared;
 
-namespace GpxWorldMap.Processing.Heatmap
+namespace Api.Processing.Heatmap
 {
     /// <summary>
     /// Builds chronological, per-activity heatmap batches while preserving the full-map

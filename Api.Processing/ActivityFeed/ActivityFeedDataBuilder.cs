@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text.Json;
-using GpxWorldMap.Models;
-using GpxWorldMap.Shared;
+using Api.Models;
+using Api.Shared;
 
-namespace GpxWorldMap.Processing.ActivityFeed
+namespace Api.Processing.ActivityFeed
 {
     /// <summary>
     /// Splits every activity with a route into JSON pages for the Activities feed,

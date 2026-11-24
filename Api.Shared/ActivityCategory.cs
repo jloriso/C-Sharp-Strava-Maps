@@ -1,4 +1,4 @@
-﻿namespace GpxWorldMap.Shared
+﻿namespace Api.Shared
 {
     /// <summary>
     /// Collapses the many raw Strava/Garmin activity type strings (Run, TrailRun,
