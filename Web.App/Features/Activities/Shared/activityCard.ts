@@ -72,7 +72,6 @@ export function createActivityDetailsView(
 export function createActivityCard(activity: FeedActivity, includeMap = true): ActivityCard {
   const card = document.createElement('article');
   card.className = 'activity-card';
-  card.style.setProperty('--activity-color', activity.color);
 
   const header = document.createElement('header');
   header.className = 'activity-header';

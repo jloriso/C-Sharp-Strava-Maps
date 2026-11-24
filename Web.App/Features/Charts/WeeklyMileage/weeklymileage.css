@@ -31,8 +31,11 @@ html, body { margin: 0; font: 14px sans-serif; background: #fafafa; }
 .week-dialog-close { font: 24px sans-serif; line-height: 1; border: 0; background: none; cursor: pointer; }
 .week-activities { display: flex; flex-direction: column; gap: 16px; }
 .week-activities .activity-card {
-    margin: 0; border-left: 4px solid var(--activity-color, #bbb); box-shadow: none;
-    padding: 0 36px 0 12px; background: none;
+    position: relative; margin: 0; border: 0; border-radius: 0; box-shadow: none;
+    padding: 12px 36px 12px 12px; background: none;
+}
+.week-activities .activity-card + .activity-card::before {
+    content: ""; position: absolute; top: -8px; left: 0; right: 0; height: 1px; background: #bbb;
 }
 .week-activities .activity-map { height: min(420px, calc(100vh - 260px)); min-height: 220px; margin-right: -36px; }
 .week-activity-map-warning, .week-activities-empty { color: #666; font-size: 13px; margin: 8px 0; }
