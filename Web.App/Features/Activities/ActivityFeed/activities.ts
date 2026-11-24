@@ -97,8 +97,10 @@ function appendCard(activity: FeedActivity): void {
 
   const view = createActivityDetailsView(activity, data.tileUrlQuery);
   feed.append(view.card);
-  cardViews.set(view.mapElement, view);
-  mapObserver.observe(view.mapElement);
+  if (view.mapElement) {
+    cardViews.set(view.mapElement, view);
+    mapObserver.observe(view.mapElement);
+  }
 }
 
 function showMap(element: HTMLElement): void {

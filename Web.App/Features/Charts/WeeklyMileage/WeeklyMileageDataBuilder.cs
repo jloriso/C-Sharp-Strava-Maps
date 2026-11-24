@@ -149,12 +149,23 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
                 .Select(t =>
                 {
                     var date = t.ActivityDate!.Value;
+                    string category = ActivityCategory.CategoryForType(t.Type);
                     return new
                     {
                         Id = t.ActivityId,
+                        Name = string.IsNullOrWhiteSpace(t.Name) ? t.ActivityId : t.Name,
                         t.Type,
-                        Category = ActivityCategory.CategoryForType(t.Type),
+                        Description = string.IsNullOrWhiteSpace(t.Description) ? null : t.Description.Trim(),
+                        Gear = string.IsNullOrWhiteSpace(t.Gear)
+                            ? null
+                            : new { Kind = "gear", Name = t.Gear.Trim(), Detail = "" },
+                        Category = category,
+                        Color = ActivityCategory.ColorForCategory(category),
                         Date = date.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),
+                        DistanceMeters = Math.Round(t.DistanceMeters, 1),
+                        t.MovingSeconds,
+                        t.ElapsedSeconds,
+                        Segments = Array.Empty<double[]>(),
                         Week = StartOfWeek(date).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                         HasDetails = t.Segments.Count > 0
                     };

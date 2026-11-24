@@ -24,7 +24,7 @@ export interface FeedActivity {
 export interface ActivityCard {
   card: HTMLElement;
   /** Empty container for the route map; fill it with showActivityMap. */
-  mapElement: HTMLElement;
+  mapElement: HTMLElement | null;
 }
 
 export interface ActivityMap {
@@ -33,7 +33,7 @@ export interface ActivityMap {
 
 export interface ActivityDetailsView {
   card: HTMLElement;
-  mapElement: HTMLElement;
+  mapElement: HTMLElement | null;
   showMap(): void;
   hideMap(): void;
   destroy(): void;
@@ -43,9 +43,13 @@ const metersPerMile = 1609.344;
 /** Activity types (besides the Run category) shown with a pace rather than a speed. */
 const paceTypes = new Set(['Walk', 'Hike']);
 
-/** Creates the shared activity card and manages its route map lifecycle. */
-export function createActivityDetailsView(activity: FeedActivity, tileUrlQuery: string): ActivityDetailsView {
-  const { card, mapElement } = createActivityCard(activity);
+/** Creates the shared activity card and manages its optional route map lifecycle. */
+export function createActivityDetailsView(
+  activity: FeedActivity,
+  tileUrlQuery: string,
+  includeMap = true,
+): ActivityDetailsView {
+  const { card, mapElement } = createActivityCard(activity, includeMap);
   let activityMap: ActivityMap | null = null;
 
   function hideMap(): void {
@@ -57,17 +61,18 @@ export function createActivityDetailsView(activity: FeedActivity, tileUrlQuery: 
     card,
     mapElement,
     showMap() {
-      if (!activityMap) activityMap = showActivityMap(mapElement, activity, tileUrlQuery);
+      if (mapElement && !activityMap) activityMap = showActivityMap(mapElement, activity, tileUrlQuery);
     },
     hideMap,
     destroy: hideMap,
   };
 }
 
-/** Builds an activity card: title, date, description, stats, gear, and a map container. */
-export function createActivityCard(activity: FeedActivity): ActivityCard {
+/** Builds an activity card: title, date, description, stats, gear, and optionally a map container. */
+export function createActivityCard(activity: FeedActivity, includeMap = true): ActivityCard {
   const card = document.createElement('article');
   card.className = 'activity-card';
+  card.style.setProperty('--activity-color', activity.color);
 
   const header = document.createElement('header');
   header.className = 'activity-header';
@@ -108,11 +113,14 @@ export function createActivityCard(activity: FeedActivity): ActivityCard {
   card.append(stats);
   if (activity.gear) card.append(gearLine(activity.gear));
 
-  const mapElement = document.createElement('div');
-  mapElement.className = 'activity-map';
-  mapElement.setAttribute('role', 'img');
-  mapElement.setAttribute('aria-label', `Route map of ${activity.name}`);
-  card.append(mapElement);
+  let mapElement: HTMLElement | null = null;
+  if (includeMap) {
+    mapElement = document.createElement('div');
+    mapElement.className = 'activity-map';
+    mapElement.setAttribute('role', 'img');
+    mapElement.setAttribute('aria-label', `Route map of ${activity.name}`);
+    card.append(mapElement);
+  }
 
   return { card, mapElement };
 }

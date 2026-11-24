@@ -25,6 +25,8 @@ namespace GpxWorldMap.FileInterpreter.FileTypeReaders
             int idxElapsed = FindColumn(header, "Elapsed Time");
             int idxMoving = FindColumn(header, "Moving Time");
             int idxGear = FindColumn(header, "Activity Gear");
+            int idxDistance = FindColumn(header, "Distance");
+            if (idxDistance < 0) idxDistance = FindColumn(header, "Activity Distance");
 
             if (idxId < 0)
                 Console.WriteLine("Warning: couldn't find an 'Activity ID' column in the CSV header.");
@@ -45,7 +47,8 @@ namespace GpxWorldMap.FileInterpreter.FileTypeReaders
                     Get(idxFilename).Trim(),
                     Get(idxElapsed).Trim(),
                     Get(idxMoving).Trim(),
-                    Get(idxGear).Trim()));
+                    Get(idxGear).Trim(),
+                    Get(idxDistance).Trim()));
             }
             return result;
         }

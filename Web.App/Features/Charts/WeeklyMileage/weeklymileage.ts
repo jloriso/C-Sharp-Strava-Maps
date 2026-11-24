@@ -21,10 +21,7 @@ interface WeeklyMileagePageData {
   tileUrlQuery: string;
 }
 
-interface WeekActivity {
-  id: string;
-  type: string;
-  category: string;
+interface WeekActivity extends Omit<FeedActivity, 'date'> {
   date: string;
   week: string;
   hasDetails: boolean;
@@ -73,20 +70,6 @@ function clearWeekActivities(): void {
   getElement('week-activities').replaceChildren();
 }
 
-function activitySummary(activity: WeekActivity, message: string): HTMLElement {
-  const summary = document.createElement('p');
-  summary.className = 'week-activity-summary';
-  const date = new Date(activity.date);
-  const formattedDate = date.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  summary.textContent = `${activity.type} · ${formattedDate} — ${message}`;
-  return summary;
-}
-
 async function showWeekActivities(week: string, category: string): Promise<void> {
   const dialog = getElement<HTMLDialogElement>('week-dialog');
   const title = getElement('week-dialog-title');
@@ -123,16 +106,17 @@ async function showWeekActivities(week: string, category: string): Promise<void>
 
   list.replaceChildren();
   for (const result of results) {
+    const view = createActivityDetailsView(result.detail ?? result.activity, tileUrlQuery, result.detail !== null);
+    activityViews.push(view);
+    list.append(view.card);
     if (result.error) {
       console.error(`Failed to load activity ${result.activity.id}`, result.error);
-      list.append(activitySummary(result.activity, "Couldn't load activity details."));
-    } else if (result.detail) {
-      const view = createActivityDetailsView(result.detail, tileUrlQuery);
-      activityViews.push(view);
-      list.append(view.card);
+      const warning = document.createElement('p');
+      warning.className = 'week-activity-map-warning';
+      warning.textContent = "Couldn't load this activity's map.";
+      view.card.append(warning);
+    } else if (view.mapElement) {
       view.showMap();
-    } else {
-      list.append(activitySummary(result.activity, 'Route map unavailable.'));
     }
   }
 }
