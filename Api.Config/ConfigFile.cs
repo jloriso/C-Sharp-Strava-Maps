@@ -10,5 +10,6 @@ namespace GpxWorldMap.Config
         public string? OutputLineMapHtml { get; set; }
         public string? OutputWeeklyMileageHtml { get; set; }
         public string? CartoApiKey { get; set; }
+        public string? CacheFile { get; set; }
     }
 }

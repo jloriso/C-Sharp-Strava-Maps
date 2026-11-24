@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using GpxWorldMap.Config;
+using GpxWorldMap.FileInterpreter;
 using GpxWorldMap.FileInterpreter.FileTypeReaders;
 using GpxWorldMap.Models;
 using GpxWorldMap.Rendering;
@@ -37,7 +38,7 @@ namespace GpxWorldMap
     ///     scrolling (ActivityFeedDataBuilder / ActivityFeedHtmlBuilder).
     ///
     /// Usage:
-    ///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [weekly-mileage-output.html] [--config path.json]
+    ///   dotnet run -- [activity-folder] [activities.csv] [heatmap-output.html] [linemap-output.html] [weekly-mileage-output.html] [--config path.json] [--no-cache]
     /// </summary>
     public static class Program
     {
@@ -56,7 +57,7 @@ namespace GpxWorldMap
                 return 1; // LoadActivities already printed the error
             var csvRecords = csvActivities ?? new List<ActivityRecord>();
 
-            var files = FindActivityFiles(config.GpxFolder);
+            var files = ActivityFileLoader.FindActivityFiles(config.GpxFolder);
             if (files.Length == 0 && csvRecords.Count == 0)
             {
                 Console.WriteLine($"No .gpx.gz, .tcx.gz, or .fit.gz files found in {config.GpxFolder}");
@@ -67,16 +68,20 @@ namespace GpxWorldMap
             else
                 Console.WriteLine("No activity files found; weekly mileage will use the CSV activity rows.");
 
+            var parseTimer = System.Diagnostics.Stopwatch.StartNew();
+            var loaded = ActivityFileLoader.LoadAll(files, config.CacheFile);
+            if (files.Length > 0)
+                Console.WriteLine($"Parsed {files.Length} activity file(s) in {parseTimer.Elapsed.TotalSeconds:F1}s " +
+                                  $"({loaded.FromCache} from cache).");
+
             var tracks = new List<ActivityTrack>();
             var matchedIds = new HashSet<string>();
             int unmatchedGpxCount = 0;
-            const int segmentLogInterval = 100;
             int totalTrackedSegments = 0;
-            int nextSegmentLogThreshold = segmentLogInterval;
 
-            foreach (var file in files.OrderBy(f => f))
+            foreach (var file in loaded.Files)
             {
-                string name = Path.GetFileName(file);
+                string name = file.FileName;
                 string id = ActivityId.FromPath(name);
 
                 var meta = ResolveMeta(id, activitiesByFilenameId!, activitiesByActivityId!);
@@ -88,49 +93,38 @@ namespace GpxWorldMap
                     Console.WriteLine($"  Note: no CSV row found for file '{name}' (looked for ID '{id}')");
                 }
 
-                try
+                if (file.Parsed == null)
                 {
-                    var parsed = ParseActivityFile(file, name);
-                    var track = new ActivityTrack
-                    {
-                        ActivityId = id,
-                        Name = meta.Name,
-                        Type = meta.Type,
-                        Description = meta.Description,
-                        Gear = meta.Gear,
-                        ElapsedSeconds = meta.ElapsedSeconds,
-                        MovingSeconds = meta.MovingSeconds,
-                        ActivityDate = ParseActivityDate(meta.Date)
-                    };
-
-                    double distanceMeters = 0;
-                    foreach (var seg in parsed.Segments)
-                    {
-                        if (seg.Count < 2) continue;
-                        track.Segments.Add(seg);
-                        track.AllPoints.AddRange(seg);
-                        distanceMeters += GeoDistance.PolylineLengthMeters(seg);
-                    }
-                    foreach (var pt in parsed.Points)
-                        track.AllPoints.Add((pt.Lat, pt.Lon));
-                    track.DistanceMeters = distanceMeters;
-
-                    if (track.Segments.Count > 0)
-                    {
-                        totalTrackedSegments += track.Segments.Count;
-                        while (totalTrackedSegments >= nextSegmentLogThreshold)
-                        {
-                            Console.WriteLine($"  Tracked {nextSegmentLogThreshold} total segment(s) so far...");
-                            nextSegmentLogThreshold += segmentLogInterval;
-                        }
-                    }
-
-                    if (track.AllPoints.Count > 0) tracks.Add(track);
+                    Console.WriteLine($"  Skipping {name}: {file.Error}");
+                    continue;
                 }
-                catch (Exception ex)
+
+                var track = new ActivityTrack
                 {
-                    Console.WriteLine($"  Skipping {name}: {ex.Message}");
+                    ActivityId = id,
+                    Name = meta.Name,
+                    Type = meta.Type,
+                    Description = meta.Description,
+                    Gear = meta.Gear,
+                    ElapsedSeconds = meta.ElapsedSeconds,
+                    MovingSeconds = meta.MovingSeconds,
+                    ActivityDate = ParseActivityDate(meta.Date)
+                };
+
+                double distanceMeters = 0;
+                foreach (var seg in file.Parsed.Segments)
+                {
+                    if (seg.Count < 2) continue;
+                    track.Segments.Add(seg);
+                    track.AllPoints.AddRange(seg);
+                    distanceMeters += GeoDistance.PolylineLengthMeters(seg);
                 }
+                foreach (var pt in file.Parsed.Points)
+                    track.AllPoints.Add((pt.Lat, pt.Lon));
+                track.DistanceMeters = distanceMeters;
+                totalTrackedSegments += track.Segments.Count;
+
+                if (track.AllPoints.Count > 0) tracks.Add(track);
             }
 
             if (totalTrackedSegments > 0)
@@ -158,33 +152,45 @@ namespace GpxWorldMap
             string heatmapHref = Path.GetFileName(config.OutputHeatmapHtml);
             string lineMapHref = Path.GetFileName(config.OutputLineMapHtml);
             string weeklyMileageHref = Path.GetFileName(config.OutputWeeklyMileageHtml);
+            // Map data is served separately from each map page, so the page (and its
+            // basemap tiles) can render while the much larger data is still downloading.
+            string heatmapDataHref = Path.ChangeExtension(heatmapHref, ".data.json");
+            string lineMapDataHref = Path.ChangeExtension(lineMapHref, ".data.json");
             const string mapsHref = "maps.html";
             const string activitiesHref = "activities.html";
 
-            Console.WriteLine("\nBuilding heatmap...");
-            var heat = HeatmapDataBuilder.Build(tracks);
-            string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(
-                heat.UndatedByTypeJs, heat.TimelineActivitiesJs, categoryColors, locations, config.CartoApiKey);
+            // The builders only read the tracks, so they run concurrently.
+            Console.WriteLine("\nBuilding heatmap, line map, weekly mileage chart, and activity feed...");
+            var buildTimer = System.Diagnostics.Stopwatch.StartNew();
+            var shoes = LoadShoes(config.CsvFile);
+            var heatTask = Task.Run(() => HeatmapDataBuilder.Build(tracks));
+            var lineTask = Task.Run(() => LineMapDataBuilder.Build(tracks));
+            var weeklyTask = Task.Run(() => WeeklyMileageDataBuilder.Build(weeklyMileageTracks));
+            var feedTask = Task.Run(() => ActivityFeedDataBuilder.Build(tracks, shoes));
+            Task.WaitAll(heatTask, lineTask, weeklyTask, feedTask);
+            Console.WriteLine($"Built page data in {buildTimer.Elapsed.TotalSeconds:F1}s.");
 
-            Console.WriteLine("Building line map (computing route frequency)...");
-            var lineData = LineMapDataBuilder.Build(tracks);
+            var heat = heatTask.Result;
+            string heatmapDataJson = HeatmapHtmlBuilder.BuildDataJson(heat.UndatedByTypeJs, heat.TimelineActivitiesJs);
+            string heatmapHtml = HeatmapHtmlBuilder.BuildHtml(heatmapDataHref, categoryColors, locations, config.CartoApiKey);
+
+            var lineData = lineTask.Result;
+            string lineMapDataJson = LineMapHtmlBuilder.BuildDataJson(
+                lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs);
             var linemapHtml = LineMapHtmlBuilder.BuildHtml(
-                lineData.ByTypeJs, lineData.UndatedActivitiesJs, lineData.TimelineActivitiesJs,
-                categoryColors, locations, config.CartoApiKey, ActivityFeedDataBuilder.ActivityUrlTemplate);
+                lineMapDataHref, categoryColors, locations, config.CartoApiKey, ActivityFeedDataBuilder.ActivityUrlTemplate);
 
-            Console.WriteLine("Building weekly mileage chart...");
-            var weeklyMileage = WeeklyMileageDataBuilder.Build(weeklyMileageTracks);
+            var weeklyMileage = weeklyTask.Result;
             if (weeklyMileage.SkippedForMissingDate > 0)
                 Console.WriteLine($"  Note: {weeklyMileage.SkippedForMissingDate} activity file(s) had no parseable date " +
                                   "(no CSV provided, a blank Activity Date, or an unparseable one) and were excluded from the mileage chart.");
             var weeklyMileageHtml = WeeklyMileageHtmlBuilder.BuildHtml(
-                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, weeklyMileage.ActivitiesJs, categoryColors,
+                weeklyMileage.WeeksJs, weeklyMileage.SeriesByTypeJs, weeklyMileage.ActivitiesByWeekJs, categoryColors,
                 ActivityFeedDataBuilder.ActivityUrlTemplate, config.CartoApiKey);
             string mapsHtml = MapSwitcherHtmlBuilder.BuildHtml(
                 heatmapHref, lineMapHref);
 
-            Console.WriteLine("Building activity feed...");
-            var feed = ActivityFeedDataBuilder.Build(tracks, LoadShoes(config.CsvFile));
+            var feed = feedTask.Result;
             var feedPageUrls = feed.PagesJson.Select((_, i) => $"activity-feed/page-{i}.json").ToList();
             string activitiesHtml = ActivityFeedHtmlBuilder.BuildHtml(feed.TotalActivities, feedPageUrls, config.CartoApiKey);
             string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
@@ -195,14 +201,18 @@ namespace GpxWorldMap
             }, "weeklymileage");
 
             WriteFile(config.OutputHeatmapHtml, heatmapHtml);
+            WriteFile(Path.ChangeExtension(config.OutputHeatmapHtml, ".data.json"), heatmapDataJson);
             WriteFile(config.OutputLineMapHtml, linemapHtml);
+            WriteFile(Path.ChangeExtension(config.OutputLineMapHtml, ".data.json"), lineMapDataJson);
             WriteFile(config.OutputWeeklyMileageHtml, weeklyMileageHtml);
 
             var servedFiles = new Dictionary<string, string>
             {
                 [weeklyMileageHref] = weeklyMileageHtml,
                 [heatmapHref] = heatmapHtml,
+                [heatmapDataHref] = heatmapDataJson,
                 [lineMapHref] = linemapHtml,
+                [lineMapDataHref] = lineMapDataJson,
                 [mapsHref] = mapsHtml,
                 [activitiesHref] = activitiesHtml,
             };
@@ -221,27 +231,6 @@ namespace GpxWorldMap
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
             File.WriteAllText(path, content, Encoding.UTF8);
             Console.WriteLine($"Wrote {Path.GetFullPath(path)}");
-        }
-
-        private static string[] FindActivityFiles(string folder)
-        {
-            return Directory.GetFiles(folder, "*.gz", SearchOption.TopDirectoryOnly)
-                .Where(f => f.EndsWith(".gpx.gz", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".tcx.gz", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".fit.gz", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-        }
-
-        private static ParsedGpx ParseActivityFile(string path, string name)
-        {
-            if (name.EndsWith(".gpx.gz", StringComparison.OrdinalIgnoreCase))
-                return GpxReader.ParseGpx(GzHelper.DecompressText(path));
-            if (name.EndsWith(".tcx.gz", StringComparison.OrdinalIgnoreCase))
-                return TcxReader.ParseTcx(GzHelper.DecompressText(path));
-            if (name.EndsWith(".fit.gz", StringComparison.OrdinalIgnoreCase))
-                return FitReader.ParseFit(GzHelper.DecompressBytes(path));
-
-            throw new InvalidOperationException("Unrecognized activity file extension.");
         }
 
         private static (

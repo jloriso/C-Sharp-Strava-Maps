@@ -11,7 +11,7 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
         public static string BuildHtml(
             string weeksJs,
             string seriesByTypeJs,
-            string activitiesJs,
+            string activitiesByWeekJs,
             List<(string Type, string Color)> categories,
             string activityDetailsUrl,
             string? cartoApiKey)
@@ -19,7 +19,7 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             return new PageDataBuilder()
                 .AddRaw("weeks", weeksJs)
                 .AddRaw("seriesByType", seriesByTypeJs)
-                .AddRaw("activities", activitiesJs)
+                .AddRaw("activitiesByWeek", activitiesByWeekJs)
                 .Add("activityTypes", categories.Select(c => new { c.Type, c.Color }))
                 .Add("activityDetailsUrl", activityDetailsUrl)
                 .Add("tileUrlQuery", string.IsNullOrWhiteSpace(cartoApiKey) ? "" : "?key=" + Uri.EscapeDataString(cartoApiKey))

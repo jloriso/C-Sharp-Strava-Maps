@@ -40,8 +40,10 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             /// order, even if a category has zero activities in this dataset.</summary>
             public string SeriesByTypeJs = "{}";
 
-            /// <summary>JSON activity summaries for the dated activities shown by the chart.</summary>
-            public string ActivitiesJs = "[]";
+            /// <summary>JSON object: {"2024-01-01": {"Run": [...], "Bike": [...]}, ...} -- each
+            /// week's dated activity summaries grouped by category and already sorted by
+            /// date, so the chart can show a clicked bar's activities with a lookup.</summary>
+            public string ActivitiesByWeekJs = "{}";
 
             public int SkippedForMissingDate;
         }
@@ -91,7 +93,7 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             {
                 WeeksJs = BuildWeeksJs(weeks),
                 SeriesByTypeJs = BuildSeriesJs(seriesByCategory),
-                ActivitiesJs = BuildActivitiesJs(dated),
+                ActivitiesByWeekJs = BuildActivitiesByWeekJs(dated),
                 SkippedForMissingDate = skipped
             };
         }
@@ -141,36 +143,41 @@ namespace GpxWorldMap.Web.Features.Charts.WeeklyMileage
             return sb.ToString();
         }
 
-        private static string BuildActivitiesJs(List<ActivityTrack> activities)
+        private static string BuildActivitiesByWeekJs(List<ActivityTrack> activities)
         {
-            var summaries = activities
+            var byWeek = new SortedDictionary<string, SortedDictionary<string, List<object>>>(StringComparer.Ordinal);
+            foreach (var t in activities
                 .OrderBy(t => t.ActivityDate)
-                .ThenBy(t => t.ActivityId, StringComparer.Ordinal)
-                .Select(t =>
+                .ThenBy(t => t.ActivityId, StringComparer.Ordinal))
+            {
+                var date = t.ActivityDate!.Value;
+                string category = ActivityCategory.CategoryForType(t.Type);
+                string week = StartOfWeek(date).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                if (!byWeek.TryGetValue(week, out var byCategory))
+                    byWeek[week] = byCategory = new SortedDictionary<string, List<object>>(StringComparer.Ordinal);
+                if (!byCategory.TryGetValue(category, out var list))
+                    byCategory[category] = list = new List<object>();
+
+                list.Add(new
                 {
-                    var date = t.ActivityDate!.Value;
-                    string category = ActivityCategory.CategoryForType(t.Type);
-                    return new
-                    {
-                        Id = t.ActivityId,
-                        Name = string.IsNullOrWhiteSpace(t.Name) ? t.ActivityId : t.Name,
-                        t.Type,
-                        Description = string.IsNullOrWhiteSpace(t.Description) ? null : t.Description.Trim(),
-                        Gear = string.IsNullOrWhiteSpace(t.Gear)
-                            ? null
-                            : new { Kind = "gear", Name = t.Gear.Trim(), Detail = "" },
-                        Category = category,
-                        Color = ActivityCategory.ColorForCategory(category),
-                        Date = date.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),
-                        DistanceMeters = Math.Round(t.DistanceMeters, 1),
-                        t.MovingSeconds,
-                        t.ElapsedSeconds,
-                        Segments = Array.Empty<double[]>(),
-                        Week = StartOfWeek(date).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                        HasDetails = t.Segments.Count > 0
-                    };
+                    Id = t.ActivityId,
+                    Name = string.IsNullOrWhiteSpace(t.Name) ? t.ActivityId : t.Name,
+                    t.Type,
+                    Description = string.IsNullOrWhiteSpace(t.Description) ? null : t.Description.Trim(),
+                    Gear = string.IsNullOrWhiteSpace(t.Gear)
+                        ? null
+                        : new { Kind = "gear", Name = t.Gear.Trim(), Detail = "" },
+                    Category = category,
+                    Color = ActivityCategory.ColorForCategory(category),
+                    Date = date.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),
+                    DistanceMeters = Math.Round(t.DistanceMeters, 1),
+                    t.MovingSeconds,
+                    t.ElapsedSeconds,
+                    Segments = Array.Empty<double[]>(),
+                    HasDetails = t.Segments.Count > 0
                 });
-            return JsonSerializer.Serialize(summaries, SerializerOptions);
+            }
+            return JsonSerializer.Serialize(byWeek, SerializerOptions);
         }
 
         private static string JsonStr(string s) => "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";

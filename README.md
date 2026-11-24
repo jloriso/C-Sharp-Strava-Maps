@@ -81,13 +81,21 @@ The first argument is the activity folder. Later arguments can include a CSV pat
 in any position; the other positional values set heatmap, line-map, and weekly
 mileage output paths, in that order. Use `--config path/to/other.json` to load a
 configuration file from another location. Positional arguments override values
-from the config file.
+from the config file. Use `--no-cache` to ignore the parsed-activity cache for one run.
 
 Use `./run.sh` on Linux or `run.bat` on Windows to start the application. Both
 scripts build the client pages only when their inputs have changed.
 
 The app writes the three generated content pages to their configured paths and
-serves those pages plus the Maps page locally. Open the root URL printed by the
+serves those pages plus the Maps page locally. The heatmap and line-map pages are
+small shells that fetch their activity data from a sibling `<page>.data.json` file
+(written next to the HTML), so the map appears immediately and fills in when the
+data arrives.
+
+Activity files are parsed in parallel, and the parsed results are cached in
+`<heatmap output folder>/.cache/parsed-activities.bin`. Later runs re-parse only
+files that are new or whose size or modification time has changed. Delete the
+cache file, or pass `--no-cache`, to force a full re-parse. Open the root URL printed by the
 program (for example, `http://localhost:<port>/`). Serving over HTTP is needed for
 map tiles; browser requests from `file://` pages do not include the expected
 Referer header.
@@ -104,6 +112,7 @@ The configuration fields are:
 | `OutputLineMapHtml` | Line-map output path. |
 | `OutputWeeklyMileageHtml` | Weekly mileage output path. |
 | `CartoApiKey` | Optional CARTO tile API key. |
+| `CacheFile` | Optional parsed-activity cache path; defaults to `.cache/parsed-activities.bin` beside the heatmap output. |
 
 Output paths default to `heatmaps/standard_heatmap.html`, `heatmaps/linemap.html`,
 and `heatmaps/weekly_mileage.html`. The local server routes each generated page by

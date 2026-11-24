@@ -10,5 +10,10 @@ namespace GpxWorldMap.Config
         public string OutputLineMapHtml = "heatmaps/linemap.html";
         public string OutputWeeklyMileageHtml = "heatmaps/weekly_mileage.html";
         public string? CartoApiKey;
+
+        /// <summary>Parsed-activity cache file (see ParsedActivityCache), or null when
+        /// caching is disabled with --no-cache. Defaults to .cache/parsed-activities.bin
+        /// next to the heatmap output.</summary>
+        public string? CacheFile;
     }
 }

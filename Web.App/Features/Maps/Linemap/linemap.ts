@@ -8,6 +8,7 @@ import { createTimelineControl } from '../../Controls/Timeline/TimelineControl';
 import { readPageData } from '../../Shared/pageData';
 import { getElement, toTypeColorLookup } from '../../Shared/types';
 import { createBaseMap, type MapPageSettings } from '../Shared/baseMap';
+import { loadMapData } from '../Shared/mapData';
 import { listenForMapState } from '../Shared/mapState';
 
 interface RouteProperties {
@@ -30,28 +31,40 @@ interface DatedLineActivity extends LineActivity {
   date: string;
 }
 
-/** Mirrors LineMapHtmlBuilder.cs / LineMapDataBuilder.cs. */
+/** Mirrors LineMapHtmlBuilder.BuildHtml. */
 interface LineMapPageData {
-  /** Only populated when no activities are dated (static, frequency-weighted routes). */
-  lineDataByType: Record<string, FeatureCollection<LineString, RouteProperties>>;
-  undatedActivities: LineActivity[];
-  timelineActivities: DatedLineActivity[];
+  /** URL of the LineMapData file, fetched once the map has been created. */
+  dataUrl: string;
   /** Served URL of one activity's details JSON, with an "{id}" placeholder. */
   activityDetailsUrl: string;
   settings: MapPageSettings;
 }
 
-const { lineDataByType, undatedActivities, timelineActivities, activityDetailsUrl, settings } = readPageData<LineMapPageData>();
+/** Mirrors LineMapHtmlBuilder.BuildDataJson / LineMapDataBuilder.cs. */
+interface LineMapData {
+  /** Only populated when no activities are dated (static, frequency-weighted routes). */
+  lineDataByType: Record<string, FeatureCollection<LineString, RouteProperties>>;
+  undatedActivities: LineActivity[];
+  timelineActivities: DatedLineActivity[];
+}
+
+const { dataUrl, activityDetailsUrl, settings } = readPageData<LineMapPageData>();
 const { map, baseLayerControl } = createBaseMap(settings);
 const typeColors = toTypeColorLookup(settings.activityTypes);
 const sharedRenderer = L.canvas({ padding: 0.5 });
-const hasTimeline = timelineActivities.length > 0;
 const activityDetails = createActivityDetailsControl(activityDetailsUrl, settings.tileUrlQuery);
+addBookmarkControl(map, settings.locations);
+addHomeControl(map, settings.homeUrl);
 
 const visibleTypes = new Set(settings.activityTypes.map(t => t.type));
 const staticLayersByType = new Map<string, L.GeoJSON>();
 const activityLayers = new Map<LineActivity, L.Polyline>();
 let visibleActivityCount = 0;
+let lineDataByType: LineMapData['lineDataByType'] = {};
+let undatedActivities: LineActivity[] = [];
+let timelineActivities: DatedLineActivity[] = [];
+
+void loadMapData<LineMapData>(dataUrl).then(showActivities);
 
 function addStaticLineLayers(): void {
   for (const [type, data] of Object.entries(lineDataByType)) {
@@ -140,27 +153,31 @@ function renderTimeline(count: number): void {
   visibleActivityCount = count;
 }
 
-if (hasTimeline) {
-  undatedActivities.forEach(syncActivityLayer);
-  map.on('moveend', syncVisibleActivities);
-} else {
-  addStaticLineLayers();
-}
-
-addBookmarkControl(map, settings.locations);
-const activityTypeControl = addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
-  if (visible) visibleTypes.add(type);
-  else visibleTypes.delete(type);
+function showActivities(data: LineMapData): void {
+  ({ lineDataByType, undatedActivities, timelineActivities } = data);
+  const hasTimeline = timelineActivities.length > 0;
 
   if (hasTimeline) {
-    syncVisibleActivities();
-    return;
+    undatedActivities.forEach(syncActivityLayer);
+    map.on('moveend', syncVisibleActivities);
+  } else {
+    addStaticLineLayers();
   }
-  const layer = staticLayersByType.get(type);
-  if (!layer) return;
-  if (visible) map.addLayer(layer);
-  else map.removeLayer(layer);
-});
-addHomeControl(map, settings.homeUrl);
-const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
-listenForMapState(map, timeline, activityTypeControl, baseLayerControl);
+
+  const activityTypeControl = addActivityTypeControl(map, settings.activityTypes, (type, visible) => {
+    if (visible) visibleTypes.add(type);
+    else visibleTypes.delete(type);
+
+    if (hasTimeline) {
+      syncVisibleActivities();
+      return;
+    }
+    const layer = staticLayersByType.get(type);
+    if (!layer) return;
+    if (visible) map.addLayer(layer);
+    else map.removeLayer(layer);
+  });
+  const timeline = createTimelineControl(getElement('map'), timelineActivities, renderTimeline);
+  map.invalidateSize(); // the timeline bar, added below the map, can shrink it
+  listenForMapState(map, timeline, activityTypeControl, baseLayerControl);
+}

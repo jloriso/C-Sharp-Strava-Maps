@@ -15,7 +15,8 @@ interface WeeklyMileagePageData {
   weeks: string[];
   /** Miles per week by category, each index-aligned with `weeks`. */
   seriesByType: Record<string, number[]>;
-  activities: WeekActivity[];
+  /** Per week, then per category: that week's activities, sorted by date. */
+  activitiesByWeek: Record<string, Record<string, WeekActivity[]>>;
   activityTypes: ActivityTypeColor[];
   activityDetailsUrl: string;
   tileUrlQuery: string;
@@ -23,7 +24,6 @@ interface WeeklyMileagePageData {
 
 interface WeekActivity extends Omit<FeedActivity, 'date'> {
   date: string;
-  week: string;
   hasDetails: boolean;
 }
 
@@ -48,7 +48,7 @@ const chartSections: ChartSectionDefinition[] = [
   },
 ];
 
-const { weeks, seriesByType, activities, activityTypes, activityDetailsUrl, tileUrlQuery } =
+const { weeks, seriesByType, activitiesByWeek, activityTypes, activityDetailsUrl, tileUrlQuery } =
   readPageData<WeeklyMileagePageData>();
 const typeColors = toTypeColorLookup(activityTypes);
 const activityViews: ActivityDetailsView[] = [];
@@ -84,9 +84,7 @@ async function showWeekActivities(week: string, category: string): Promise<void>
   const dateOptions: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
   title.textContent = `${category} · ${start.toLocaleDateString(undefined, dateOptions)} – ${end.toLocaleDateString(undefined, dateOptions)}`;
 
-  const weekActivities = activities
-    .filter(activity => activity.week === week && activity.category === category)
-    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  const weekActivities = activitiesByWeek[week]?.[category] ?? [];
   emptyMessage.hidden = weekActivities.length > 0;
   if (!dialog.open) dialog.showModal();
   if (weekActivities.length === 0) return;
