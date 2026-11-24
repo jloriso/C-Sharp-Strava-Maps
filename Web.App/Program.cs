@@ -184,7 +184,7 @@ namespace GpxWorldMap
             string activitiesHtml = ActivityFeedHtmlBuilder.BuildHtml(feed.TotalActivities, feedPageUrls, config.CartoApiKey);
             string indexHtml = IndexHtmlBuilder.BuildHtml(new List<(string Key, string Label, string Href)>
             {
-                ("weeklymileage", "Weekly Mileage", weeklyMileageHref),
+                ("weeklymileage", "Charts", weeklyMileageHref),
                 ("maps", "Maps", mapsHref),
                 ("activities", "Activities", activitiesHref)
             }, "weeklymileage");
