@@ -52,7 +52,10 @@ const { weeks, seriesByType, activitiesByWeek, activityTypes, activityDetailsUrl
   readPageData<WeeklyMileagePageData>();
 const typeColors = toTypeColorLookup(activityTypes);
 const activityViews: ActivityDetailsView[] = [];
+const weekIndexByStart = new Map(weeks.map((week, index) => [week, index]));
 let weekRequest = 0;
+/** The week and category the dialog is showing, for its Prev/Next navigation. */
+let dialogWeek: { index: number; category: string } | null = null;
 
 function showMessage(text: string): void {
   getElement('chart-sections').style.display = 'none';
@@ -84,7 +87,15 @@ async function showWeekActivities(week: string, category: string): Promise<void>
   const dateOptions: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
   title.textContent = `${category} · ${start.toLocaleDateString(undefined, dateOptions)} – ${end.toLocaleDateString(undefined, dateOptions)}`;
 
+  const weekIndex = weekIndexByStart.get(week) ?? -1;
+  dialogWeek = weekIndex >= 0 ? { index: weekIndex, category } : null;
+  const weekMiles = weekIndex >= 0 ? seriesByType[category]?.[weekIndex] ?? 0 : 0;
   const weekActivities = activitiesByWeek[week]?.[category] ?? [];
+  const activityCount = `${weekActivities.length} ${weekActivities.length === 1 ? 'activity' : 'activities'}`;
+  getElement('week-dialog-total').textContent = `${weekMiles.toFixed(1)} mi · ${activityCount}`;
+  getElement<HTMLButtonElement>('week-dialog-prev').disabled = weekIndex <= 0;
+  getElement<HTMLButtonElement>('week-dialog-next').disabled = weekIndex < 0 || weekIndex >= weeks.length - 1;
+
   emptyMessage.hidden = weekActivities.length > 0;
   if (!dialog.open) dialog.showModal();
   if (weekActivities.length === 0) return;
@@ -304,7 +315,27 @@ if (!ChartCtor) {
   });
   dialog.addEventListener('close', () => {
     weekRequest++;
+    dialogWeek = null;
     clearWeekActivities();
   });
   getElement<HTMLButtonElement>('week-dialog-close').addEventListener('click', () => dialog.close());
+
+  const showAdjacentWeek = (offset: number) => {
+    if (!dialogWeek) return;
+    const week = weeks[dialogWeek.index + offset];
+    if (week) {
+      dialog.scrollTop = 0;
+      void showWeekActivities(week, dialogWeek.category);
+    }
+  };
+  getElement<HTMLButtonElement>('week-dialog-prev').addEventListener('click', () => showAdjacentWeek(-1));
+  getElement<HTMLButtonElement>('week-dialog-next').addEventListener('click', () => showAdjacentWeek(1));
+  dialog.addEventListener('keydown', event => {
+    // Leave arrow keys to a focused map (Leaflet pans with them) or form control.
+    if (event.target instanceof Element && event.target.closest('.leaflet-container, input, textarea, select')) return;
+    if (event.key === 'ArrowLeft') showAdjacentWeek(-1);
+    else if (event.key === 'ArrowRight') showAdjacentWeek(1);
+    else return;
+    event.preventDefault();
+  });
 }

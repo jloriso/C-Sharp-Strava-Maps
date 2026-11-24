@@ -28,6 +28,9 @@ html, body { margin: 0; font: 14px sans-serif; background: #fafafa; }
 .week-dialog::backdrop { background: rgba(0,0,0,0.45); }
 .week-dialog-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
 .week-dialog-header h2 { font-size: 17px; margin: 0; }
+.week-dialog-heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.week-dialog-total { font-size: 14px; font-weight: 600; color: #444; }
+.week-dialog-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .week-dialog-close { font: 24px sans-serif; line-height: 1; border: 0; background: none; cursor: pointer; }
 .week-activities { display: flex; flex-direction: column; gap: 16px; }
 .week-activities .activity-card {
@@ -40,4 +43,4 @@ html, body { margin: 0; font: 14px sans-serif; background: #fafafa; }
 .week-activities .activity-map { height: min(420px, calc(100vh - 260px)); min-height: 220px; margin-right: -36px; }
 .week-activity-map-warning, .week-activities-empty { color: #666; font-size: 13px; margin: 8px 0; }
 @media (max-width: 760px) { .chart-grid { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 600px) { #page { padding: 10px; } .chart-canvas { height: 220px; } .controls-row { gap: 6px; } .nav-btn { padding: 6px 8px; } }
+@media (max-width: 600px) { #page { padding: 10px; } .chart-canvas { height: 220px; } .controls-row { gap: 6px; } .nav-btn { padding: 6px 8px; } .week-dialog-header { flex-wrap: wrap; } }

@@ -13,8 +13,15 @@
     <div id="chart-sections"></div>
     <dialog id="week-dialog" class="week-dialog" aria-labelledby="week-dialog-title">
         <div class="week-dialog-header">
-            <h2 id="week-dialog-title"></h2>
-            <button id="week-dialog-close" type="button" class="week-dialog-close" aria-label="Close">&times;</button>
+            <div class="week-dialog-heading">
+                <h2 id="week-dialog-title"></h2>
+                <span id="week-dialog-total" class="week-dialog-total"></span>
+            </div>
+            <div class="week-dialog-actions">
+                <button id="week-dialog-prev" type="button" class="nav-btn" title="Previous week (←)" aria-label="Previous week">&lsaquo; Prev</button>
+                <button id="week-dialog-next" type="button" class="nav-btn" title="Next week (→)" aria-label="Next week">Next &rsaquo;</button>
+                <button id="week-dialog-close" type="button" class="week-dialog-close" aria-label="Close">&times;</button>
+            </div>
         </div>
         <p id="week-activities-empty" class="week-activities-empty" hidden>No activities this week.</p>
         <div id="week-activities" class="week-activities"></div>
