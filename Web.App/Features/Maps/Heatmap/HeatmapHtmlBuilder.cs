@@ -5,9 +5,9 @@ using GpxWorldMap.Web.Features.Maps.Shared;
 namespace GpxWorldMap.Web.Features.Maps.Heatmap
 {
     /// <summary>Builds the standalone heatmap page by loading the built heatmap.html
-    /// (from heatmap.html + heatmap.ts) and injecting its settings, plus the separately
-    /// served data file the page fetches after it renders. Keep the property names in
-    /// sync with the HeatmapPageData / HeatmapData interfaces in heatmap.ts.</summary>
+    /// (from heatmap.html + heatmap.ts) and injecting its settings. The data file the
+    /// page fetches after it renders comes from HeatmapDataBuilder (Api.Processing).
+    /// Keep the property names in sync with the HeatmapPageData interface in heatmap.ts.</summary>
     public static class HeatmapHtmlBuilder
     {
         public static string BuildHtml(
@@ -20,14 +20,6 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
                 .Add("dataUrl", dataUrl)
                 .Add("settings", MapPageSettings.Create(types, locations, cartoApiKey))
                 .ApplyTo(HtmlTemplateLoader.Load("Features/Maps/Heatmap", "heatmap.html"));
-        }
-
-        public static string BuildDataJson(string undatedPointsByTypeJs, string timelineActivitiesJs)
-        {
-            return new PageDataBuilder()
-                .AddRaw("undatedPointsByType", undatedPointsByTypeJs)
-                .AddRaw("timelineActivities", timelineActivitiesJs)
-                .ToJson();
         }
     }
 }

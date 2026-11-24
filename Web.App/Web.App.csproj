@@ -10,11 +10,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Api.Config\Api.Config.csproj" />
-    <ProjectReference Include="..\Api.FileReader\Api.FileReader.csproj" />
     <ProjectReference Include="..\Api.Models\Api.Models.csproj" />
     <ProjectReference Include="..\Api.Shared\Api.Shared.csproj" />
     <ProjectReference Include="..\Web.Rendering\Web.Rendering.csproj" />
     <ProjectReference Include="..\Web.Server\Web.Server.csproj" />
+    <ProjectReference Include="..\Api.Processing\Api.Processing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,9 +39,7 @@
     <ClientSource Include="Features/**/*.html;Features/**/*.ts;Features/**/*.css" />
   </ItemGroup>
 
-  <Target Name="ClientNpmInstall"
-          BeforeTargets="ClientBuild"
-          Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'">
+  <Target Name="ClientNpmInstall" BeforeTargets="ClientBuild" Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'">
     <Exec Command="node --version" ContinueOnError="true" StandardOutputImportance="low">
       <Output TaskParameter="ExitCode" PropertyName="NodeExitCode" />
     </Exec>
@@ -49,11 +47,7 @@
     <Exec Command="node scripts/ensure-dependencies.mjs" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
-  <Target Name="ClientBuild"
-          BeforeTargets="AssignTargetPaths"
-          Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'"
-          Inputs="@(ClientSource)"
-          Outputs="$(ClientBuildStamp)">
+  <Target Name="ClientBuild" BeforeTargets="AssignTargetPaths" Condition="'$(SkipClientBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'" Inputs="@(ClientSource)" Outputs="$(ClientBuildStamp)">
     <Exec Command="npm run build" />
     <Touch Files="$(ClientBuildStamp)" AlwaysCreate="true" />
   </Target>
@@ -61,9 +55,7 @@
   <Target Name="IncludeClientOutput" AfterTargets="ClientBuild" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
       <_ClientOutput Include="dist/**/*.html" />
-      <Content Include="@(_ClientOutput)"
-               TargetPath="%(_ClientOutput.RecursiveDir)%(_ClientOutput.Filename)%(_ClientOutput.Extension)"
-               CopyToOutputDirectory="PreserveNewest" />
+      <Content Include="@(_ClientOutput)" TargetPath="%(_ClientOutput.RecursiveDir)%(_ClientOutput.Filename)%(_ClientOutput.Extension)" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 

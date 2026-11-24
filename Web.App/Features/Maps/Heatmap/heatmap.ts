@@ -25,7 +25,7 @@ interface HeatmapPageData {
   settings: MapPageSettings;
 }
 
-/** Mirrors HeatmapHtmlBuilder.BuildDataJson / HeatmapDataBuilder.cs. */
+/** Mirrors HeatmapDataBuilder.cs (Api.Processing). */
 interface HeatmapData {
   undatedPointsByType: Record<string, HeatPoint[]>;
   timelineActivities: HeatmapActivity[];

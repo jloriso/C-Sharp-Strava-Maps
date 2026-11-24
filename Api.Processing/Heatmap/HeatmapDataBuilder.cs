@@ -3,7 +3,7 @@ using System.Text.Json;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
-namespace GpxWorldMap.Web.Features.Maps.Heatmap
+namespace GpxWorldMap.Processing.Heatmap
 {
     /// <summary>
     /// Builds chronological, per-activity heatmap batches while preserving the full-map
@@ -13,8 +13,9 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
     {
         public class Result
         {
-            public string UndatedByTypeJs = "{}";
-            public string TimelineActivitiesJs = "[]";
+            /// <summary>The heatmap page's data file. Keep the property names in sync
+            /// with the HeatmapData interface in heatmap.ts.</summary>
+            public string DataJson = "{}";
         }
 
         private sealed class ActivityBucket
@@ -97,8 +98,9 @@ namespace GpxWorldMap.Web.Features.Maps.Heatmap
 
             return new Result
             {
-                UndatedByTypeJs = JsonSerializer.Serialize(undatedPoints),
-                TimelineActivitiesJs = JsonSerializer.Serialize(timeline)
+                DataJson = RawJsonObject.Compose(
+                    ("undatedPointsByType", JsonSerializer.Serialize(undatedPoints)),
+                    ("timelineActivities", JsonSerializer.Serialize(timeline)))
             };
         }
 

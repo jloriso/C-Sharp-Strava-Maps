@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Rendering", "Web.Render
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Server", "Web.Server\Web.Server.csproj", "{1C17C5FF-85CE-4809-909E-57AFBF8F6D9B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Processing", "Api.Processing\Api.Processing.csproj", "{994468F7-59DC-4790-90E4-6EE782C6D631}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{1C17C5FF-85CE-4809-909E-57AFBF8F6D9B}.Release|x64.Build.0 = Release|Any CPU
 		{1C17C5FF-85CE-4809-909E-57AFBF8F6D9B}.Release|x86.ActiveCfg = Release|Any CPU
 		{1C17C5FF-85CE-4809-909E-57AFBF8F6D9B}.Release|x86.Build.0 = Release|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Debug|x64.Build.0 = Debug|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Debug|x86.Build.0 = Debug|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Release|Any CPU.Build.0 = Release|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Release|x64.ActiveCfg = Release|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Release|x64.Build.0 = Release|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Release|x86.ActiveCfg = Release|Any CPU
+		{994468F7-59DC-4790-90E4-6EE782C6D631}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

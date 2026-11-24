@@ -138,11 +138,12 @@ revealed in the timeline and its route bounds intersect the current map bounds.
 ```text
 GpxWorldMap.sln                             # solution containing every project below
 Directory.Build.props                       # shared target framework / nullable settings
-Web.App/Program.cs                          # entry point: input processing, data building, page routing
+Web.App/Program.cs                          # entry point: config, page shells, routing
 Api.Config/                                 # config models and CLI/config loading
-Api.FileReader/FileTypeReaders/             # CSV, GPX, TCX, FIT, and gzip readers
+Api.FileReader/                             # parallel cached file loading; CSV/GPX/TCX/FIT/gzip readers
 Api.Models/                                 # activity metadata, tracks, parsed geometry
-Api.Shared/                                 # activity IDs, categories, distance, locations
+Api.Processing/                             # CSV join, track assembly, and all page data builders
+Api.Shared/                                 # activity IDs, categories, distance
 Web.Rendering/                              # HTML template loader and page data builder
 Web.Server/                                 # local HTTP server and browser launch
 Web.App/package.json, tsconfig.json         # frontend (TypeScript + Vite) build
@@ -151,17 +152,19 @@ Web.App/scripts/build-pages.mjs             # builds each page into Web.App/dist
 Web.App/Index/                              # root shell page with one app navigation
 Web.App/Features/Shared/                    # shared TS types, page-data reader, iframe messages
 Web.App/Features/Controls/<Name>/           # one folder per control (<Name>Control.ts + .css)
-Web.App/Features/Charts/WeeklyMileage/      # mileage aggregation, chart builder, page
+Web.App/Features/Charts/WeeklyMileage/      # mileage chart builder and page
 Web.App/Features/Maps/Shared/               # base map setup and shared map settings
-Web.App/Features/Maps/Heatmap/              # chronological heatmap data and page
-Web.App/Features/Maps/Linemap/              # chronological route data and page
+Web.App/Features/Maps/Heatmap/              # chronological heatmap page
+Web.App/Features/Maps/Linemap/              # chronological route page
 Web.App/Features/Maps/MapSwitcher/          # map toggle wrapper page
-Web.App/Features/Activities/ActivityFeed/   # paged per-activity feed data and page
+Web.App/Features/Activities/ActivityFeed/   # paged per-activity feed page
 Web.App/Features/Activities/Shared/         # activity card + route map shared by the feed and details dialog
 ```
 
-Each page is an `.html` + `.ts` (+ `.css`) next to its C# `*HtmlBuilder`. The C#
-builder only serializes data into the page's
+Each page is an `.html` + `.ts` (+ `.css`) next to its C# `*HtmlBuilder`. All
+activity computation happens in `Api.Processing` (`ActivityIngestion`, then
+`SiteDataBuilder`, which runs the `*DataBuilder`s concurrently and returns finished
+JSON). The web-side C# builder only serializes settings and that data into the page's
 `<script id="page-data" type="application/json">{{PAGE_DATA_JSON}}</script>` block
 (via `PageDataBuilder`); all markup and behavior live in TypeScript. Controls are
 typed modules that pages import, e.g. `addBookmarkControl(map, locations, ...)`.
@@ -186,9 +189,11 @@ the npm step.
 - Edit the preset "Jump to" views in
   `Web.App/Features/Controls/Bookmark/bookmarks.json` (the first one is where maps
   load into). `BookmarkStore` loads and saves this file.
-- Change heatmap rounding and weight clipping in `HeatmapDataBuilder.Build(...)`.
-- Change line-map grid size and frequency tiers in `LineMapDataBuilder.cs`.
+- Change heatmap rounding and weight clipping in
+  `Api.Processing/Heatmap/HeatmapDataBuilder.cs`.
+- Change line-map grid size and frequency tiers in
+  `Api.Processing/Linemap/LineMapDataBuilder.cs`.
 - Change the mileage chart window and navigation step in
   `Web.App/Features/Charts/WeeklyMileage/weeklymileage.ts`.
 - Change the activity feed page size and route simplification tolerance in
-  `ActivityFeedDataBuilder.cs`.
+  `Api.Processing/ActivityFeed/ActivityFeedDataBuilder.cs`.

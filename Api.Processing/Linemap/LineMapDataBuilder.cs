@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
-namespace GpxWorldMap.Web.Features.Maps.Linemap
+namespace GpxWorldMap.Processing.Linemap
 {
     /// <summary>
     /// Builds the "well-worn route" line data for the line map, one FeatureCollection
@@ -77,10 +77,9 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
 
         public class Result
         {
-            /// <summary>JS object literal: {"Run": {FeatureCollection...}, "Ride": {...}}.</summary>
-            public string ByTypeJs = "{}";
-            public string UndatedActivitiesJs = "[]";
-            public string TimelineActivitiesJs = "[]";
+            /// <summary>The line map page's data file. Keep the property names in sync
+            /// with the LineMapData interface in linemap.ts.</summary>
+            public string DataJson = "{}";
         }
 
         private sealed class TimelineActivity
@@ -117,6 +116,7 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
             if (timelineActivities.Count == 0)
                 undatedActivities = new List<TimelineActivity>();
 
+            // {"Run": {FeatureCollection...}, "Ride": {...}} -- only for undated (static) maps.
             string byTypeJs = "{}";
             if (timelineActivities.Count == 0)
             {
@@ -134,9 +134,10 @@ namespace GpxWorldMap.Web.Features.Maps.Linemap
 
             return new Result
             {
-                ByTypeJs = byTypeJs,
-                UndatedActivitiesJs = JsonSerializer.Serialize(undatedActivities, TimelineJsonOptions),
-                TimelineActivitiesJs = JsonSerializer.Serialize(timelineActivities, TimelineJsonOptions)
+                DataJson = RawJsonObject.Compose(
+                    ("lineDataByType", byTypeJs),
+                    ("undatedActivities", JsonSerializer.Serialize(undatedActivities, TimelineJsonOptions)),
+                    ("timelineActivities", JsonSerializer.Serialize(timelineActivities, TimelineJsonOptions)))
             };
         }
 

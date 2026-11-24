@@ -3,7 +3,7 @@ using System.Text.Json;
 using GpxWorldMap.Models;
 using GpxWorldMap.Shared;
 
-namespace GpxWorldMap.Web.Features.Activities.ActivityFeed
+namespace GpxWorldMap.Processing.ActivityFeed
 {
     /// <summary>
     /// Splits every activity with a route into JSON pages for the Activities feed,

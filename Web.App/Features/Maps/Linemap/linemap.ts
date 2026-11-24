@@ -40,7 +40,7 @@ interface LineMapPageData {
   settings: MapPageSettings;
 }
 
-/** Mirrors LineMapHtmlBuilder.BuildDataJson / LineMapDataBuilder.cs. */
+/** Mirrors LineMapDataBuilder.cs (Api.Processing). */
 interface LineMapData {
   /** Only populated when no activities are dated (static, frequency-weighted routes). */
   lineDataByType: Record<string, FeatureCollection<LineString, RouteProperties>>;
